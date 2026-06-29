@@ -200,6 +200,57 @@ func initDB() {
 	createTables()
 }
 
+// FindOrCreateUser checks if a Google user exists; if not, inserts them into the DB.
+func FindOrCreateUser(claims GoogleClaims, assignedRole string) (*User, error) {
+	var user User
+
+	// 1. Check if user already exists by their unique Google ID
+	query := `SELECT id, google_id, name, email, phone, role, avatar_url, is_approved, created_at 
+	          FROM users WHERE google_id = $1`
+	err := db.QueryRow(query, claims.ID).Scan(
+		&user.ID, &user.GoogleID, &user.Name, &user.Email,
+		&user.Phone, &user.Role, &user.AvatarURL, &user.IsApproved, &user.CreatedAt,
+	)
+
+	if err == sql.ErrNoRows {
+		// 2. User doesn't exist, let's create a new master user account
+		insertUserQuery := `
+			INSERT INTO users (google_id, name, email, role, avatar_url, is_approved)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING id, google_id, name, email, phone, role, avatar_url, is_approved, created_at`
+
+		// By default, customers and admins are approved instantly. Riders might await admin confirmation.
+		isApproved := true
+		if assignedRole == "rider" {
+			isApproved = false // Set to false if you want an admin approval step for riders
+		}
+
+		err = db.QueryRow(insertUserQuery, claims.ID, claims.Name, claims.Email, assignedRole, claims.Picture, isApproved).Scan(
+			&user.ID, &user.GoogleID, &user.Name, &user.Email,
+			&user.Phone, &user.Role, &user.AvatarURL, &user.IsApproved, &user.CreatedAt,
+		)
+		if err != nil {
+			return nil, fmt.Errorf("error inserting new user: %v", err)
+		}
+
+		// 3. Special rule: If they registered as a rider, provision an accompanying rider metrics row
+		if assignedRole == "rider" {
+			insertRiderQuery := `INSERT INTO riders (user_id, is_available, total_deliveries) VALUES ($1, false, 0)`
+			_, err = db.Exec(insertRiderQuery, user.ID)
+			if err != nil {
+				return nil, fmt.Errorf("error provisioning rider details row: %v", err)
+			}
+		}
+
+		return &user, nil
+	} else if err != nil {
+		return nil, fmt.Errorf("database query error during authentication: %v", err)
+	}
+
+	// User exists, return the found record
+	return &user, nil
+}
+
 // Create tables
 func createTables() {
 	queries := []string{
@@ -245,6 +296,100 @@ func createTables() {
 }
 
 // --- AUTHENTICATION HANDLERS START ---
+
+// HandleGoogleAuthCallback processes the token sent from frontend Google Sign-In
+func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
+	// 1. Parse the incoming request payload
+	var requestData struct {
+		Credential string `json:"credential"`
+		Role       string `json:"role"` // 'customer' or 'rider' sent from frontend selection
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&requestData)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid request payload"})
+		return
+	}
+
+	if requestData.Credential == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Google credential token missing"})
+		return
+	}
+
+	// Default to customer role if nothing valid was submitted
+	assignedRole := strings.ToLower(requestData.Role)
+	if assignedRole != "customer" && assignedRole != "rider" {
+		assignedRole = "customer"
+	}
+
+	// 2. Validate the token directly with Google's Token Verification API
+	googleTokenURL := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", requestData.Credential)
+	resp, err := http.Get(googleTokenURL)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to connect to Google validation service"})
+		return
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Invalid or expired Google token"})
+		return
+	}
+
+	// 3. Unpack the validated response into our GoogleClaims struct
+	var claims GoogleClaims
+	err = json.NewDecoder(resp.Body).Decode(&claims)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Failed to read profile details from Google"})
+		return
+	}
+
+	// 4. Save/Fetch user information using our database layer function
+	user, err := FindOrCreateUser(claims, assignedRole)
+	if err != nil {
+		log.Printf("DB Error tracking auth user: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Database error managing user account profile"})
+		return
+	}
+
+	// 5. Generate our own local BelleFood JWT access token for safety
+	expirationTime := time.Now().Add(24 * time.Hour)
+	tokenClaims := jwt.MapClaims{
+		"user_id": user.ID,
+		"email":   user.Email,
+		"role":    user.Role,
+		"exp":     expirationTime.Unix(),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims)
+	tokenString, err := token.SignedString(jwtKey)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(map[string]string{"error": "Could not sign application login session token"})
+		return
+	}
+
+	// 6. Return successful session payload response to the frontend client
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"token": tokenString,
+		"user": map[string]interface{}{
+			"id":          user.ID,
+			"name":        user.Name,
+			"email":       user.Email,
+			"role":        user.Role,
+			"avatar_url":  user.AvatarURL,
+			"is_approved": user.IsApproved,
+		},
+	})
+}
 
 func adminLogin(w http.ResponseWriter, r *http.Request) {
 	var creds Credentials
@@ -653,8 +798,6 @@ func updateOrderTracking(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Initialize database
-
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
@@ -684,6 +827,9 @@ func main() {
 	router.HandleFunc("/api/payment/initialize", initializePayment).Methods("POST")
 	router.HandleFunc("/api/payment/verify", verifyPayment).Methods("GET")
 
+	// Google Auth Sign-In Endpoint Route
+	router.HandleFunc("/api/auth/google", HandleGoogleAuthCallback).Methods("POST")
+
 	// Login Route (Returns the JWT Token)
 	router.HandleFunc("/api/login", adminLogin).Methods("POST")
 
@@ -697,10 +843,7 @@ func main() {
 	router.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
 	// Serve Admin Files
 	router.PathPrefix("/admin/").Handler(http.StripPrefix("/admin/", http.FileServer(http.Dir("../admin"))))
-	// Serve Frontend files (Important for Ngrok/Production)
-	// Assumes "frontend" folder is a sibling to "backend"
-	// If you are NOT using ngrok with the backend-serving-frontend setup, you can remove this line.
-	// But it is safer to keep it.
+	// Serve Frontend files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../frontend")))
 
 	// CORS
