@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login & Sign Up | 24/7 BelleFood</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.png">
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
+    <style>
+        body {
+            background: #f5f5f5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .auth-card {
+            background: #ffffff;
+            padding: 3rem 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
+            width: 100%;
+            max-width: 440px;
+            text-align: center;
+        }
+
+        .auth-card h1 {
+            color: #1a1a1a;
+            margin-bottom: 0.5rem;
+            font-size: 2.2rem;
+        }
+
+        .auth-card p {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-box {
+            display: flex;
+            background: #f0f0f0;
+            padding: 0.4rem;
+            border-radius: 30px;
+            margin-bottom: 2rem;
+        }
+
+        .role-option {
+            flex: 1;
+            padding: 0.75rem;
+            border: none;
+            background: none;
+            font-weight: 700;
+            font-size: 0.95rem;
+            color: #555;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .role-option.active {
+            background: #d4af37;
+            color: #ffffff;
+            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2);
+        }
+
+        .google-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 1rem;
+            min-height: 50px;
+        }
+
+        .error-banner {
+            background: #fdf2f2;
+            color: #ec5b5b;
+            padding: 0.8rem;
+            border-radius: 8px;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            display: none;
+            border: 1px solid #fbcbcb;
+        }
+
+        .back-home {
+            display: inline-block;
+            margin-top: 2rem;
+            color: #d4af37;
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .back-home:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="auth-card">
+        <h1 class="font-secondary">BelleFood</h1>
+        <p>Sign in or register an account instantly</p>
+
+        <div class="role-box">
+            <button class="role-option active" id="btn-customer" onclick="switchRole('customer')">
+                <i class="fas fa-user"></i> Customer
+            </button>
+            <button class="role-option" id="btn-rider" onclick="switchRole('rider')">
+                <i class="fas fa-motorcycle"></i> Rider
+            </button>
+        </div>
+
+        <div id="error-alert" class="error-banner"></div>
+
+        <div class="google-container">
+            <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com"
+                data-context="signin" data-ux_mode="popup" data-callback="handleGoogleLogin" data-auto_prompt="false">
+            </div>
+
+            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline"
+                data-text="continue_with" data-size="large" data-logo_alignment="left">
+            </div>
+        </div>
+
+        <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> Back to Homepage</a>
+    </div>
+
+    <script>
+        let selectedRole = 'customer';
+        const API_URL = window.location.origin;
+
+        function switchRole(role) {
+            selectedRole = role;
+            document.getElementById('btn-customer').classList.toggle('active', role === 'customer');
+            document.getElementById('btn-rider').classList.toggle('active', role === 'rider');
+        }
+
+        async function handleGoogleLogin(googleResponse) {
+            const errorAlert = document.getElementById('error-alert');
+            errorAlert.style.display = 'none';
+
+            try {
+                // Submit target token payload directly over to our API route
+                const res = await fetch(`${API_URL}/api/auth/google`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        credential: googleResponse.credential,
+                        role: selectedRole
+                    })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.error || 'Server rejected authentication token request.');
+                }
+
+                // Cache active token and user metadata context natively in local storage
+                localStorage.setItem('bf_token', data.token);
+                localStorage.setItem('bf_user', JSON.stringify(data.user));
+
+                // Direct application view routing depending on assigned role matching metrics
+                if (data.user.role === 'rider') {
+                    window.location.href = 'rider-dashboard.html';
+                } else {
+                    window.location.href = 'menu.html';
+                }
+
+            } catch (err) {
+                errorAlert.textContent = `❌ ${err.message}`;
+                errorAlert.style.display = 'block';
+            }
+        }
+    </script>
+</body>
+
+</html>

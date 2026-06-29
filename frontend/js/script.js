@@ -88,4 +88,56 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
+
+    // --- DYNAMIC NAVBAR AUTH SYNCHRONIZATION ---
+    syncNavbarAuth();
 });
+
+// Functions exposed globally to handle state renders and user events cleanly
+function syncNavbarAuth() {
+    const navLinks = document.querySelector('.nav-links');
+    if (!navLinks) return;
+
+    const token = localStorage.getItem('bf_token');
+    const userString = localStorage.getItem('bf_user');
+
+    // Remove any stale dynamic login elements to prevent layout duplicates
+    const oldAuthNode = document.getElementById('dynamic-auth-node');
+    if (oldAuthNode) oldAuthNode.remove();
+
+    const li = document.createElement('li');
+    li.id = 'dynamic-auth-node';
+
+    if (token && userString) {
+        try {
+            const user = JSON.parse(userString);
+            const shortName = user.name ? user.name.split(' ')[0] : 'User';
+
+            // Logged-in styling block matching your layout palette
+            li.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 0.4rem 1rem; border-radius: 50px; border: 1px solid rgba(214,175,55,0.3); margin-left: 10px;">
+                    <img src="${user.avatar_url || 'https://via.placeholder.com/32'}" alt="Profile Image" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37;">
+                    <span style="color: #ffffff; font-weight: bold; font-size: 0.9rem;">Hi, ${shortName}</span>
+                    <button onclick="triggerLogout()" style="background: none; border: none; color: #ec5b5b; font-weight: bold; cursor: pointer; font-size: 0.85rem; margin-left: 5px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">Logout</button>
+                </div>
+            `;
+        } catch (e) {
+            console.error("Error unpacking customer session profile payload stream:", e);
+            renderLoggedOutLink(li);
+        }
+    } else {
+        renderLoggedOutLink(li);
+    }
+
+    navLinks.appendChild(li);
+}
+
+function renderLoggedOutLink(listItemElement) {
+    listItemElement.innerHTML = `<a href="auth.html" class="btn btn-primary" style="padding: 0.5rem 1.2rem; display: inline-block; text-decoration: none; margin-left: 10px;">Login / Sign Up</a>`;
+}
+
+function triggerLogout() {
+    localStorage.removeItem('bf_token');
+    localStorage.removeItem('bf_user');
+    window.location.href = 'index.html';
+}

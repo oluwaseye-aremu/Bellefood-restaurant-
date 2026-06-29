@@ -1,5 +1,5 @@
 // Menu Dynamic Script with Cart Functionality
-const API_URL = 'http://localhost:8080/api';
+const API_URL = `${window.location.origin}/api`;
 
 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 let allMenuItems = []; // Store all items globally for search
@@ -177,13 +177,22 @@ function updateCartCount() {
         const navLinks = document.querySelector('.nav-links');
         if (navLinks) {
             const cartItem = document.createElement('li');
+            cartItem.id = 'dynamic-cart-node'; // Added an explicit identifier boundary
             cartItem.innerHTML = `
-                <a href="cart.html" style="position: relative;">
+                <a href="cart.html" style="position: relative; display: inline-block; padding: 0.5rem;">
                     <i class="fas fa-shopping-cart"></i>
-                    <span id="cart-count" style="position: absolute; top: -8px; right: -8px; background: #c0392b; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem;">${totalItems}</span>
+                    <span id="cart-count" style="position: absolute; top: -4px; right: -4px; background: #c0392b; color: white; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.65rem;">${totalItems}</span>
                 </a>
             `;
-            navLinks.appendChild(cartItem);
+
+            // UI SAFEGUARD FIX: Insert the cart icon node right before the dynamic Auth badge 
+            // if an auth badge exists, preventing layout jumping.
+            const dynamicAuth = document.getElementById('dynamic-auth-node');
+            if (dynamicAuth) {
+                navLinks.insertBefore(cartItem, dynamicAuth);
+            } else {
+                navLinks.appendChild(cartItem);
+            }
             badge = document.getElementById('cart-count');
         }
     }
@@ -238,8 +247,6 @@ function showError(message) {
 }
 
 function filterByCategory(category) {
-    // If filtering by button, we just reload from DB for simplicity, 
-    // or we could filter allMenuItems locally. reloading is safer for sync.
     loadMenuItems(category);
 }
 
