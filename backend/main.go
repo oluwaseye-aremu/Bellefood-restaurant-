@@ -305,7 +305,7 @@ func getMenuItems(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var items []MenuItem
+	items := []MenuItem{}
 	for rows.Next() {
 		var item MenuItem
 		err := rows.Scan(&item.ID, &item.Title, &item.Description, &item.Price, &item.Category, &item.ImageURL, &item.Ingredients, &item.CreatedAt)
@@ -572,7 +572,7 @@ func getAllOrders(w http.ResponseWriter, r *http.Request) {
 	}
 	defer rows.Close()
 
-	var orders []Order
+	orders := []Order{}
 	for rows.Next() {
 		var order Order
 		err := rows.Scan(&order.ID, &order.CustomerName, &order.CustomerEmail, &order.CustomerPhone, &order.Items, &order.TotalAmount, &order.Status, &order.TrackingID, &order.PaymentStatus, &order.CreatedAt)

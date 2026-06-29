@@ -1,13 +1,13 @@
 :root {
-    --primary-color: #d4af37;
-    /* Gold */
-    --secondary-color: #1a1a1a;
-    /* Dark Charcoal */
-    --accent-color: #c0392b;
+    --primary-color: #e60000;
+    /* Red */
+    --secondary-color: #111111;
+    /* Black */
+    --accent-color: #cc0000;
     /* Deep Red */
-    --text-color: #333;
-    --light-text: #f4f4f4;
-    --bg-color: #fff;
+    --text-color: #333333;
+    --light-text: #ffffff;
+    --bg-color: #ffffff;
     --light-bg: #f9f9f9;
     --font-heading: 'Playfair Display', serif;
     --font-body: 'Lato', sans-serif;
