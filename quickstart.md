@@ -14,9 +14,9 @@ Get your restaurant website up and running in 10 minutes!
    ```
 4. Save it - you'll need it in Step 2
 
-### Step 2: Setup Stripe (2 minutes)
+### Step 2: Setup paystack (2 minutes)
 
-1. Go to https://dashboard.stripe.com/ and sign up
+1. Go to https://dashboard.paystack.com/ and sign up
 2. Navigate to **Developers → API Keys**
 3. Copy both keys:
    - **Publishable key** (starts with `pk_test_`)

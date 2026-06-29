@@ -95,7 +95,7 @@ POST /api/menu
 **Form Fields:**
 - `title` (required) - Item name
 - `description` (required) - Item description
-- `price` (required) - Price in USD (decimal)
+- `price` (required) - Price in NGN (decimal)
 - `category` (required) - Category name
 - `ingredients` (optional) - Comma-separated list
 - `image` (required) - Image file (JPG, PNG, GIF, WebP)
@@ -397,60 +397,81 @@ curl -X POST http://localhost:8080/api/orders/15/tracking \
 
 ## 💳 Payment Endpoints
 
-### Create Payment Intent
+### Initialize Paystack Payment
 
 ```http
-POST /api/payment/create-intent
+POST /api/payment/initialize
 ```
 
-**Description:** Create a Stripe PaymentIntent for checkout
+**Description:** Initialize a Paystack transaction for checkout
 
 **Content-Type:** `application/json`
 
 **Request Body:**
 ```json
 {
-  "amount": 56.00
+  "amount": 5600,
+  "email": "john@example.com"
 }
 ```
 
 **Request:**
 ```bash
-curl -X POST http://localhost:8080/api/payment/create-intent \
+curl -X POST http://localhost:8080/api/payment/initialize \
   -H "Content-Type: application/json" \
-  -d '{"amount": 56.00}'
+  -d '{"amount": 5600, "email": "john@example.com"}'
 ```
 
 **Response:** `200 OK`
 ```json
 {
-  "clientSecret": "pi_3Abc123xyz_secret_456def789ghi"
+  "status": true,
+  "message": "Authorization URL created",
+  "data": {
+    "authorization_url": "https://checkout.paystack.com/...",
+    "access_code": "access_code",
+    "reference": "reference"
+  }
 }
 ```
 
 **Notes:**
-- Amount is in dollars (backend converts to cents)
-- Returns client secret for Stripe.js
-- Currency: USD (can be changed in main.go)
+- Amount is in naira on the frontend; the backend converts it to kobo before sending it to Paystack.
+- The frontend redirects the customer to `data.authorization_url`.
+- Currency: NGN.
 
 **Possible Errors:**
 - `400` - Invalid amount
-- `500` - Stripe API error
+- `500` - Paystack API error
 
 **Frontend Usage:**
 ```javascript
-// 1. Create intent
-const response = await fetch('/api/payment/create-intent', {
+// 1. Initialize Paystack transaction
+const response = await fetch('/api/payment/initialize', {
   method: 'POST',
-  body: JSON.stringify({ amount: 56.00 })
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ amount: 5600, email: 'john@example.com' })
 });
-const { clientSecret } = await response.json();
+const data = await response.json();
 
-// 2. Confirm payment with Stripe.js
-const result = await stripe.confirmCardPayment(clientSecret, {
-  payment_method: { card: cardElement }
-});
+// 2. Redirect customer to Paystack checkout
+window.location.href = data.data.authorization_url;
 ```
+
+### Verify Paystack Payment
+
+```http
+GET /api/payment/verify?reference={reference}
+```
+
+**Description:** Verify a Paystack transaction after the customer returns from checkout.
+
+**Request:**
+```bash
+curl "http://localhost:8080/api/payment/verify?reference=PAYSTACK_REFERENCE"
+```
+
+**Response:** Paystack verification response.
 
 ---
 
@@ -577,10 +598,10 @@ db.QueryRow("SELECT * FROM orders WHERE tracking_id = $1", trackingID)
 # 1. Customer browses menu
 curl http://localhost:8080/api/menu
 
-# 2. Create payment intent
-curl -X POST http://localhost:8080/api/payment/create-intent \
+# 2. Initialize Paystack payment
+curl -X POST http://localhost:8080/api/payment/initialize \
   -H "Content-Type: application/json" \
-  -d '{"amount": 56.00}'
+  -d '{"amount": 5600, "email": "john@example.com"}'
 
 # 3. After successful payment, create order
 curl -X POST http://localhost:8080/api/orders \
@@ -630,20 +651,9 @@ curl -X DELETE http://localhost:8080/api/menu/3
 
 ## 🧪 Testing
 
-### Stripe Test Cards
+### Paystack Test Payments
 
-Use these for testing payments:
-
-| Card Number | Result |
-|-------------|--------|
-| 4242 4242 4242 4242 | Success |
-| 4000 0025 0000 3155 | Requires authentication |
-| 4000 0000 0000 9995 | Declined |
-
-**Test Details:**
-- Expiry: Any future date
-- CVC: Any 3 digits
-- ZIP: Any 5 digits
+Use Paystack test payment details from your Paystack dashboard or Paystack documentation.
 
 ### Postman Collection
 

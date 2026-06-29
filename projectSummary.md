@@ -7,7 +7,7 @@ A **full-stack restaurant website** with:
 ### Customer Features ✨
 - **Dynamic Menu** - Loads from PostgreSQL database
 - **Shopping Cart** - Add items, adjust quantities
-- **Stripe Payment** - Secure credit card processing
+- **Paystack Payment** - Secure checkout processing
 - **Order Tracking** - Real-time order status updates
 - **Responsive Design** - Works on all devices
 
@@ -22,14 +22,14 @@ A **full-stack restaurant website** with:
 ### Frontend
 - **HTML5/CSS3** - Your existing restaurant design
 - **JavaScript** - Dynamic cart and menu loading
-- **Stripe.js** - Payment processing UI
+- **Paystack Checkout** - Redirect-based payment flow
 - **LocalStorage** - Shopping cart persistence
 
 ### Backend
 - **Go (Golang)** - Fast, efficient API server
 - **Gorilla Mux** - HTTP routing
 - **PostgreSQL** - Database (via Neon)
-- **Stripe Go SDK** - Payment processing
+- **Paystack HTTP API** - Payment initialization and verification
 
 ### Database (Neon PostgreSQL)
 - **menu_items** - Store food items
@@ -47,7 +47,7 @@ A **full-stack restaurant website** with:
                                         │ HTTPS
                                         ▼
                                  ┌──────────────┐
-                                 │    Stripe    │
+                                 │    Paystack    │
                                  │   Payments   │
                                  └──────────────┘
 ```
@@ -73,7 +73,7 @@ admin/
 ```
 frontend/
 ├── cart.html            - Shopping cart
-├── checkout.html        - Stripe payment
+├── checkout.html        - Paystack payment
 ├── tracking.html        - Order tracking
 └── js/
     └── menu-dynamic.js  - Menu loader
@@ -104,7 +104,7 @@ User visits menu.html
 Customer adds to cart
   → Cart saved to LocalStorage
     → Checkout page loads
-      → Stripe payment processed
+      → Paystack payment processed
         → POST /api/orders creates order
           → Tracking ID generated
             → Customer can track order
@@ -133,7 +133,7 @@ Admin updates order status
 - **HTTPS** - All communication encrypted (in production)
 - **SQL Injection Protection** - Parameterized queries
 - **CORS** - Restricted origins
-- **Stripe PCI Compliance** - No card data stored
+- **Paystack PCI Compliance** - No card data stored
 - **Session Auth** - Admin login (basic implementation)
 - **File Upload Validation** - Image-only uploads
 
@@ -145,7 +145,7 @@ Admin updates order status
 | id | SERIAL | Primary key |
 | title | VARCHAR(255) | Item name |
 | description | TEXT | Item description |
-| price | DECIMAL(10,2) | Price in USD |
+| price | DECIMAL(10,2) | Price in NGN |
 | category | VARCHAR(100) | Category (starters, main, etc.) |
 | image_url | TEXT | Path to image |
 | ingredients | TEXT | Comma-separated list |
@@ -182,7 +182,7 @@ Admin updates order status
 2. **Add to Cart** → Items saved to LocalStorage
 3. **View Cart** → cart.html shows items with quantity controls
 4. **Checkout** → checkout.html collects details
-5. **Pay** → Stripe processes payment ($28.00)
+5. **Pay** → Paystack processes payment (₦ amount)
 6. **Receive Tracking** → ORD-1702483821 generated
 7. **Track Order** → tracking.html shows real-time status
 
@@ -211,12 +211,16 @@ cart.push({id: 1, title: "Truffle Risotto", price: 28, quantity: 1});
 localStorage.setItem('cart', JSON.stringify(cart));
 ```
 
-### Stripe Integration
+### Paystack Integration
 ```javascript
-// Secure payment processing
-const {error, paymentIntent} = await stripe.confirmCardPayment(
-  clientSecret, {payment_method: {card: cardElement}}
-);
+// Initialize payment, then redirect to Paystack checkout
+const response = await fetch('/api/payment/initialize', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ amount, email })
+});
+const data = await response.json();
+window.location.href = data.data.authorization_url;
 ```
 
 ### Order Tracking
@@ -233,7 +237,7 @@ GET /api/orders/tracking/ORD-1702483821
 |--------|----------|-------------|
 | GET | `/api/menu` | Get all menu items |
 | GET | `/api/menu?category=starters` | Filter by category |
-| POST | `/api/payment/create-intent` | Create Stripe payment |
+| POST | `/api/payment/initialize` | Create Paystack payment |
 | POST | `/api/orders` | Create new order |
 | GET | `/api/orders/tracking/{id}` | Track order |
 
@@ -251,7 +255,7 @@ GET /api/orders/tracking/ORD-1702483821
 - [ ] Cart adds/removes items correctly
 - [ ] Cart persists after page reload
 - [ ] Checkout calculates totals correctly
-- [ ] Stripe test payment succeeds (4242 4242 4242 4242)
+- [ ] Paystack test payment succeeds
 - [ ] Order creates with tracking ID
 - [ ] Tracking page displays order correctly
 - [ ] Admin can login
@@ -287,10 +291,7 @@ const categories = {
 ```
 
 ### Change Currency
-In `main.go`:
-```go
-Currency: stripe.String(string(stripe.CurrencyEUR)), // Change to EUR
-```
+The current Paystack payment flow is configured for NGN in `main.go`.
 
 ### Add Email Notifications
 Integrate SMTP in backend:
@@ -328,7 +329,7 @@ func sendOrderConfirmation(email, trackingID string) {
 - [ ] CDN for static assets
 - [ ] Unit tests (Go test suite)
 - [ ] API rate limiting
-- [ ] Stripe webhooks for payment events
+- [ ] Paystack webhooks for payment events
 
 ## 🎓 What You Learned
 
@@ -337,7 +338,7 @@ By completing this project, you now know:
 1. **Full-stack Development** - Frontend ↔ Backend ↔ Database
 2. **RESTful API Design** - CRUD operations
 3. **Database Management** - SQL, migrations, relationships
-4. **Payment Processing** - Stripe integration
+4. **Payment Processing** - Paystack integration
 5. **State Management** - LocalStorage, session management
 6. **File Uploads** - Handling multipart form data
 7. **CORS Configuration** - Cross-origin requests
@@ -353,12 +354,12 @@ By completing this project, you now know:
 
 ### External Resources
 - [Go Documentation](https://golang.org/doc/)
-- [Stripe API Docs](https://stripe.com/docs/api)
+- [Paystack API Docs](https://paystack.com/docs/api)
 - [Neon PostgreSQL](https://neon.tech/docs)
 - [Gorilla Mux](https://github.com/gorilla/mux)
 
 ### Testing Tools
-- Stripe Test Cards: https://stripe.com/docs/testing
+- Paystack Test Cards: https://paystack.com/docs/testing
 - PostgreSQL Client: pgAdmin, DBeaver
 - API Testing: Postman, Insomnia
 - Browser DevTools: Chrome, Firefox
@@ -376,7 +377,7 @@ You now have a fully functional restaurant website with:
 **Total Lines of Code:** ~3,000+  
 **Files Created:** 14  
 **Features Implemented:** 15+  
-**APIs Integrated:** 2 (Stripe, Neon)
+**APIs Integrated:** 2 (Paystack, Neon)
 
 ---
 

@@ -6,7 +6,7 @@ Deploy your Lumière Restaurant website to production.
 
 - [ ] Test all features locally
 - [ ] Have Neon PostgreSQL database ready
-- [ ] Have Stripe live API keys (not test keys)
+- [ ] Have Paystack live API keys (not test keys)
 - [ ] Domain name (optional but recommended)
 - [ ] SSL certificate (handled automatically by most platforms)
 
@@ -33,7 +33,7 @@ Deploy your Lumière Restaurant website to production.
    In Railway dashboard, add these variables:
    ```
    DATABASE_URL=your_neon_postgresql_connection_string
-   STRIPE_SECRET_KEY=sk_live_your_live_secret_key
+   PAYSTACK_SECRET_KEY=sk_live_your_live_secret_key
    PORT=8080
    ```
 
@@ -65,7 +65,7 @@ Deploy your Lumière Restaurant website to production.
    - **Add Environment Variables:**
      ```
      DATABASE_URL=your_neon_connection
-     STRIPE_SECRET_KEY=sk_live_xxx
+     PAYSTACK_SECRET_KEY=sk_live_xxx
      PORT=8080
      ```
 
@@ -92,7 +92,7 @@ Deploy your Lumière Restaurant website to production.
 3. **Set Environment Variables**
    ```bash
    heroku config:set DATABASE_URL="your_neon_url"
-   heroku config:set STRIPE_SECRET_KEY="sk_live_xxx"
+   heroku config:set PAYSTACK_SECRET_KEY="sk_live_xxx"
    ```
 
 4. **Create Procfile** in backend folder:
@@ -180,21 +180,19 @@ AllowedOrigins: []string{
 
 Redeploy backend after this change.
 
-## Part 4: Configure Stripe for Production
+## Part 4: Configure Paystack for Production
 
-1. **Get Live API Keys**
-   - Go to Stripe Dashboard
+1. **Get Live API Key**
+   - Go to Paystack Dashboard
    - Switch from Test to Live mode
-   - Get live keys (start with `sk_live_` and `pk_live_`)
+   - Get your live secret key (starts with `sk_live_`)
 
 2. **Update Backend**
-   - Set `STRIPE_SECRET_KEY` to live key in Railway/Render/Heroku
+   - Set `PAYSTACK_SECRET_KEY` to live key in Railway/Render/Heroku
 
-3. **Update Frontend**
-   - In `checkout.html`, change:
-   ```javascript
-   const STRIPE_PUBLISHABLE_KEY = 'pk_live_your_live_key';
-   ```
+3. **Frontend**
+   - No Paystack public key is required in the current redirect-based checkout flow.
+   - The frontend calls `/api/payment/initialize` and redirects to the Paystack `authorization_url`.
 
 ## Part 5: Setup Custom Domain (Optional)
 
@@ -269,12 +267,12 @@ Make it POST to backend instead of client-side check.
 ## 🔒 Security Checklist
 
 - [ ] Use HTTPS (handled by platforms)
-- [ ] Use live Stripe keys in production
+- [ ] Use live Paystack keys in production
 - [ ] Implement proper admin authentication (JWT)
 - [ ] Restrict CORS to your domains only
 - [ ] Never expose .env file
 - [ ] Use strong admin passwords
-- [ ] Enable Stripe webhook signature verification
+- [ ] Enable Paystack webhook signature verification
 - [ ] Regular database backups (Neon handles this)
 - [ ] Monitor error logs
 - [ ] Rate limiting on API endpoints
@@ -297,13 +295,13 @@ Make it POST to backend instead of client-side check.
 - Check query performance
 - Regular backups
 
-### Stripe Webhooks (Advanced)
+### Paystack Webhooks (Advanced)
 
 To receive real-time payment updates:
 
-1. In Stripe Dashboard: Developers → Webhooks
-2. Add endpoint: `https://your-backend.com/api/webhooks/stripe`
-3. Select events: `payment_intent.succeeded`, `payment_intent.failed`
+1. In Paystack Dashboard: Developers → Webhooks
+2. Add endpoint: `https://your-backend.com/api/webhooks/paystack`
+3. Select Paystack events such as `charge.success`
 4. Implement webhook handler in backend
 
 ## 🐛 Troubleshooting
@@ -321,9 +319,9 @@ Verify image URLs are correct in database
 
 **Payment failing:**
 ```
-Verify live Stripe keys are set
+Verify live Paystack keys are set
 Check webhook configurations
-Test with Stripe test cards first
+Test with Paystack test payments first
 ```
 
 **Database connection issues:**
@@ -338,7 +336,7 @@ Ensure IP allowlist is configured (if enabled)
 **Neon PostgreSQL:** Free tier (up to 512MB)  
 **Railway:** Free $5 credit/month, then ~$5-20/month  
 **Netlify:** Free tier (100GB bandwidth)  
-**Stripe:** 2.9% + 30¢ per transaction  
+**Paystack:** fees vary by country, card type, and settlement rules  
 
 **Total:** ~$5-20/month for small-medium traffic
 
@@ -357,7 +355,7 @@ After successful deployment:
 1. **Test Everything:**
    - [ ] Browse menu
    - [ ] Add to cart
-   - [ ] Complete checkout with test card
+   - [ ] Complete checkout with Paystack test payment
    - [ ] Track order
    - [ ] Login to admin
    - [ ] Add/delete menu items
@@ -370,7 +368,7 @@ After successful deployment:
    - Submit to Google Search Console
 
 3. **Monitor First Orders:**
-   - Watch Stripe dashboard
+   - Watch Paystack dashboard
    - Check order logs
    - Verify email notifications work
    - Test customer tracking links
@@ -380,7 +378,7 @@ After successful deployment:
 - [Railway Docs](https://docs.railway.app/)
 - [Netlify Docs](https://docs.netlify.com/)
 - [Neon Docs](https://neon.tech/docs)
-- [Stripe Production Checklist](https://stripe.com/docs/development/checklist)
+- [Paystack Production Checklist](https://paystack.com/docs/development/checklist)
 - [Go Deployment Best Practices](https://golang.org/doc/articles/wiki/)
 
 ---

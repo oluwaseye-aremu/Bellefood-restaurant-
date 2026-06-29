@@ -66,7 +66,8 @@ go mod tidy
 go get github.com/gorilla/mux
 go get github.com/lib/pq
 go get github.com/rs/cors
-go get github.com/stripe/stripe-go/v72
+go get github.com/golang-jwt/jwt/v5
+go get github.com/joho/godotenv
 
 # Clear module cache if needed
 go clean -modcache
@@ -221,46 +222,35 @@ Access to fetch at 'http://localhost:8080/api/menu' from origin
 
 ## 💳 Payment Issues
 
-### Stripe Payment Failing
+### Paystack Payment Failing
 
 **Symptoms:**
 - "Payment failed" message
 - Checkout button doesn't work
 
 **Solutions:**
-1. Verify Stripe keys are correct:
-   ```javascript
-   // In checkout.html
-   const STRIPE_PUBLISHABLE_KEY = 'pk_test_...';
-   // Should start with pk_test_ for testing
-   ```
-
+1. Verify Paystack keys are correct:
    ```bash
    # In backend .env
-   STRIPE_SECRET_KEY=sk_test_...
+   PAYSTACK_SECRET_KEY=sk_test_...
    # Should start with sk_test_ for testing
    ```
 
-2. Use test card numbers:
-   - Success: `4242 4242 4242 4242`
-   - Use any future date, any CVC
+2. Use Paystack test payment details from your Paystack dashboard or Paystack documentation.
 
-3. Check Stripe dashboard for errors:
-   - Go to https://dashboard.stripe.com/test/logs
+3. Check Paystack dashboard for errors:
+   - Go to https://dashboard.paystack.com/test/logs
    - Look for failed payment attempts
 
-4. Verify Stripe.js is loaded:
-   ```html
-   <script src="https://js.stripe.com/v3/"></script>
-   ```
+4. Confirm checkout receives an `authorization_url` from `/api/payment/initialize`.
 
 5. Check browser console for errors
 
-### "Payment Intent Creation Failed"
+### "Payment Initialization Failed"
 
 **Symptoms:**
 ```
-Error creating payment intent
+Payment init failed
 ```
 
 **Solutions:**
@@ -268,14 +258,14 @@ Error creating payment intent
 
 2. Verify amount is sent correctly:
    ```javascript
-   // Amount should be in cents
+   // Amount should be in naira
    body: JSON.stringify({ amount: 28.00 }) // Correct
-   // Backend converts to cents: 28.00 * 100 = 2800
+   // Backend converts to kobo before sending to Paystack
    ```
 
-3. Check Stripe secret key is set:
+3. Check Paystack secret key is set:
    ```bash
-   echo $STRIPE_SECRET_KEY
+   echo $PAYSTACK_SECRET_KEY
    # Should print your key
    ```
 
@@ -563,7 +553,7 @@ When asking for help, include:
 ### Contact Points
 
 - **GitHub Issues:** Create detailed issue
-- **Stack Overflow:** Tag with #golang, #stripe, #postgresql
+- **Stack Overflow:** Tag with #golang, #paystack, #postgresql
 - **Discord/Slack:** Developer communities
 
 ---
@@ -576,7 +566,7 @@ When asking for help, include:
 | Menu not loading | Verify API_URL, check backend running |
 | CORS error | Update AllowedOrigins in main.go |
 | Images not showing | Check uploads folder exists |
-| Payment failing | Verify Stripe keys, use test card |
+| Payment failing | Verify Paystack keys, use test payment |
 | Cart not saving | Clear localStorage, check console |
 | Admin can't login | Use admin/admin123, clear session |
 | Tracking not found | Verify tracking ID case-sensitive |

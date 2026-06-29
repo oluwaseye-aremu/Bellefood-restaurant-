@@ -1,6 +1,6 @@
 # Lumière Restaurant Website - Full Stack Application
 
-A complete restaurant website with Go backend, PostgreSQL database, Stripe payment integration, and order tracking system.
+A complete restaurant website with Go backend, PostgreSQL database, Paystack payment integration, and order tracking system.
 
 ## 🏗️ Project Structure
 
@@ -13,7 +13,7 @@ restaurant-website/
 │   ├── contact.html
 │   ├── packages.html
 │   ├── cart.html         # NEW: Shopping cart
-│   ├── checkout.html     # NEW: Stripe payment
+│   ├── checkout.html     # NEW: Paystack payment
 │   ├── tracking.html     # NEW: Order tracking
 │   ├── css/
 │   │   └── style.css
@@ -36,7 +36,7 @@ restaurant-website/
 
 - **Go 1.21+** - [Download](https://golang.org/dl/)
 - **PostgreSQL** (Neon) - [Sign up](https://neon.tech/)
-- **Stripe Account** - [Sign up](https://stripe.com/)
+- **Paystack Account** - [Sign up](https://paystack.com/)
 
 ### 2. Database Setup (Neon PostgreSQL)
 
@@ -57,11 +57,12 @@ go mod init restaurant-backend
 go get github.com/gorilla/mux
 go get github.com/lib/pq
 go get github.com/rs/cors
-go get github.com/stripe/stripe-go/v72
+go get github.com/golang-jwt/jwt/v5
+go get github.com/joho/godotenv
 
 # Set environment variables
 export DATABASE_URL="your_neon_postgresql_connection_string"
-export STRIPE_SECRET_KEY="sk_test_your_stripe_secret_key"
+export PAYSTACK_SECRET_KEY="sk_test_your_paystack_secret_key"
 export PORT="8080"
 
 # Run the server
@@ -71,20 +72,17 @@ go run main.go
 **For Windows:**
 ```cmd
 set DATABASE_URL=your_neon_postgresql_connection_string
-set STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+set PAYSTACK_SECRET_KEY=sk_test_your_paystack_secret_key
 set PORT=8080
 go run main.go
 ```
 
-### 4. Get Stripe API Keys
+### 4. Get Paystack API Key
 
-1. Go to https://dashboard.stripe.com/
+1. Go to https://dashboard.paystack.com/
 2. Navigate to **Developers > API Keys**
-3. Copy your **Publishable key** (starts with `pk_test_`)
-4. Copy your **Secret key** (starts with `sk_test_`)
-5. Update in:
-   - Backend: `STRIPE_SECRET_KEY` environment variable
-   - Frontend: `checkout.html` - Replace `STRIPE_PUBLISHABLE_KEY`
+3. Copy your **Secret key** (starts with `sk_test_` for testing or `sk_live_` for production)
+4. Set it as the backend `PAYSTACK_SECRET_KEY` environment variable
 
 ### 5. Frontend Setup
 
@@ -122,7 +120,7 @@ Visit: `http://localhost:3000/admin/admin.html`
 ### Customer Features
 ✅ Dynamic menu loaded from database  
 ✅ Shopping cart with localStorage  
-✅ Stripe payment integration  
+✅ Paystack payment integration  
 ✅ Order tracking with real-time updates  
 ✅ Responsive design  
 
@@ -140,7 +138,7 @@ Create a `.env` file in the backend directory:
 
 ```env
 DATABASE_URL=postgresql://user:pass@host/database?sslmode=require
-STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxx
+PAYSTACK_SECRET_KEY=sk_test_xxxxxxxxxxxxx
 PORT=8080
 ```
 
@@ -201,18 +199,14 @@ AllowedOrigins: []string{"http://localhost:3000", "https://yourdomain.com"}
 - `POST /api/orders/{id}/tracking` - Update tracking (Admin)
 
 ### Payment
-- `POST /api/payment/create-intent` - Create Stripe payment intent
+- `POST /api/payment/initialize` - Initialize a Paystack transaction
+- `GET /api/payment/verify?reference={reference}` - Verify a Paystack transaction
 
 ## 🧪 Testing
 
-### Test Stripe Payments
+### Test Paystack Payments
 
-Use these test card numbers:
-- **Success:** `4242 4242 4242 4242`
-- **Requires authentication:** `4000 0025 0000 3155`
-- **Declined:** `4000 0000 0000 9995`
-
-Use any future date for expiry, any 3 digits for CVC, and any ZIP code.
+Use Paystack test payment details from your Paystack dashboard or Paystack documentation.
 
 ## 📱 Usage Flow
 
@@ -221,7 +215,7 @@ Use any future date for expiry, any 3 digits for CVC, and any ZIP code.
 2. Add items to cart
 3. View cart at `/cart.html`
 4. Checkout at `/checkout.html`
-5. Make payment with Stripe
+5. Make payment with Paystack
 6. Receive tracking ID
 7. Track order at `/tracking.html`
 
@@ -245,7 +239,7 @@ Use any future date for expiry, any 3 digits for CVC, and any ZIP code.
 - Check browser console for errors
 
 **Payment failing:**
-- Verify Stripe keys are correct
+- Verify Paystack keys are correct
 - Check you're using test keys for development
 - Ensure HTTPS in production
 
@@ -274,7 +268,7 @@ This project is for educational purposes.
 
 For issues or questions, please check:
 - Go documentation: https://golang.org/doc/
-- Stripe docs: https://stripe.com/docs
+- Paystack docs: https://paystack.com/docs
 - Neon docs: https://neon.tech/docs
 
 ---
