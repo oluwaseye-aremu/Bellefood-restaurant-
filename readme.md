@@ -274,3 +274,15 @@ For issues or questions, please check:
 ---
 
 **Happy Coding! 🎉**
+
+
+A Quick Note on Admin-Created Accounts (Question 2)
+Because we are using Google OAuth2 for authentication, there are no passwords in our system. Google handles the security. So, if you want to manually add a rider from the Admin panel, you won't "send them login details" like a password.
+Instead, the workflow will be:
+
+You enter the rider's Gmail address into the Admin panel and set their role to rider.
+
+You tell the rider: "Go to the website and click 'Login with Google' using your Gmail."
+
+When they log in, our system sees their email matches the one you pre-approved, and instantly grants them access to their secure Rider Dashboard.
+(And yes, I will strictly enforce Role-Based Access Control so no one can view a dashboard that doesn't belong to their role).
