@@ -12,58 +12,157 @@
         rel="stylesheet">
     <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.png">
 
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
     <style>
+        /* --- CORE CONFIGURATION RESET --- */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
         body {
-            background: #f5f5f5;
-            min-height: 100vh;
+            font-family: 'Lato', sans-serif;
+            background-color: #f8f9fa;
+            height: 100vh;
+            width: 100%;
+            overflow: hidden;
+            /* Completely eliminates unwanted browser scrollbars */
+        }
+
+        /* --- THE SPLIT LAYOUT ENGINE --- */
+        .auth-split-container {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Left Side: Brand Showcase Panel */
+        .auth-brand-side {
+            background: linear-gradient(rgba(26, 26, 26, 0.85), rgba(26, 26, 26, 0.9)),
+                url('https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1000') no-repeat center center;
+            background-size: cover;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 3rem;
+            color: white;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Left Watermark Background Tattoo */
+        .auth-brand-side::after {
+            content: "";
+            position: absolute;
+            bottom: -5%;
+            left: -5%;
+            width: 350px;
+            height: 350px;
+            background: url('assets/sisi-alase-removebg-preview.png') no-repeat center center;
+            background-size: contain;
+            opacity: 0.08;
+            transform: rotate(15deg);
+            pointer-events: none;
+        }
+
+        .brand-side-logo {
+            max-width: 130px;
+            margin-bottom: 1.5rem;
+            filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.3));
+        }
+
+        .brand-side-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3rem;
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+        }
+
+        .brand-side-title span {
+            color: #d4af37;
+        }
+
+        /* Right Side: Centered Action Workspace Panel */
+        .auth-form-side {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            /* Securely pins workspace to center and footer to bottom */
+            align-items: center;
+            padding: 2.5rem;
+            background-color: #fafbfc;
+            /* Sleek off-white tone to blend the negative space */
+            position: relative;
+            height: 100vh;
+        }
+
+        /* Right Floating Tattoo Watermark */
+        .auth-form-side::after {
+            content: "";
+            position: absolute;
+            bottom: 40px;
+            right: 40px;
+            width: 240px;
+            height: 240px;
+            background: url('assets/sisi-alase-removebg-preview.png') no-repeat center center;
+            background-size: contain;
+            opacity: 0.035;
+            transform: rotate(-20deg);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Dynamic Vertical Alignment Card Box */
+        .auth-card-workspace {
+            flex: 1;
             display: flex;
             align-items: center;
+            /* Centers the login card exactly in the vertical middle of the screen */
             justify-content: center;
-            font-family: 'Lato', sans-serif;
+            width: 100%;
+            z-index: 1;
         }
 
         .auth-card {
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
             background: #ffffff;
             padding: 3rem 2.5rem;
             border-radius: 16px;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.06);
-            width: 100%;
-            max-width: 440px;
-            text-align: center;
+            box-shadow: 0 10px 35px rgba(0, 0, 0, 0.02);
+            border: 1px solid #edf2f7;
         }
 
-        .auth-card h1 {
+        .auth-card h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.4rem;
             color: #1a1a1a;
-            margin-bottom: 0.5rem;
-            font-size: 2.2rem;
+            margin-bottom: 0.4rem;
         }
 
-        .auth-card p {
-            color: #666;
-            font-size: 0.95rem;
-            margin-bottom: 2rem;
-        }
-
-        .role-box {
+        /* Role Switcher Layout Element Module */
+        .role-switch-container {
             display: flex;
-            background: #f0f0f0;
-            padding: 0.4rem;
-            border-radius: 30px;
-            margin-bottom: 2rem;
+            background: #f1f3f5;
+            padding: 6px;
+            border-radius: 50px;
+            margin: 2rem 0;
         }
 
-        .role-option {
+        .role-btn {
             flex: 1;
-            padding: 0.75rem;
-            border: none;
             background: none;
+            border: none;
+            padding: 0.85rem;
             font-weight: 700;
-            font-size: 0.95rem;
-            color: #555;
-            border-radius: 25px;
+            font-size: 0.9rem;
             cursor: pointer;
+            color: #6c757d;
+            border-radius: 50px;
             transition: all 0.25s ease;
             display: flex;
             align-items: center;
@@ -71,120 +170,191 @@
             gap: 8px;
         }
 
-        .role-option.active {
+        .role-btn.active {
+            color: #1a1a1a;
             background: #d4af37;
-            color: #ffffff;
-            box-shadow: 0 4px 10px rgba(212, 175, 55, 0.2);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.25);
         }
 
-        .google-container {
+        /* Google SSO Platform Button Box */
+        .google-btn-wrapper {
+            margin: 2rem 0;
             display: flex;
             justify-content: center;
-            margin-top: 1rem;
-            min-height: 50px;
+            width: 100%;
         }
 
-        .error-banner {
-            background: #fdf2f2;
-            color: #ec5b5b;
-            padding: 0.8rem;
-            border-radius: 8px;
-            margin-bottom: 1.5rem;
-            font-size: 0.9rem;
-            display: none;
-            border: 1px solid #fbcbcb;
-        }
-
-        .back-home {
-            display: inline-block;
-            margin-top: 2rem;
-            color: #d4af37;
+        .back-home-link {
+            color: #8892b0;
             text-decoration: none;
-            font-size: 0.9rem;
-            font-weight: bold;
+            font-size: 0.95rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: color 0.2s;
+            margin-top: 0.5rem;
         }
 
-        .back-home:hover {
-            text-decoration: underline;
+        .back-home-link:hover {
+            color: #d4af37;
+        }
+
+        /* Clean Grounded Absolute Base Footer Block Component */
+        .auth-standalone-footer {
+            width: 100%;
+            text-align: center;
+            padding-top: 1.5rem;
+            font-size: 0.8rem;
+            color: #a0aec0;
+            letter-spacing: 0.5px;
+            z-index: 1;
+        }
+
+        /* --- RESPONSIVE ENGINE VIEWPORT SCALE SETTINGS --- */
+        @media (max-width: 991px) {
+
+            html,
+            body {
+                overflow: auto;
+                height: auto;
+            }
+
+            .auth-split-container {
+                grid-template-columns: 1fr;
+                height: auto;
+            }
+
+            .auth-brand-side {
+                padding: 4rem 2rem;
+            }
+
+            .auth-form-side {
+                height: auto;
+                min-height: 100vh;
+                padding: 3.5rem 2rem 2rem;
+            }
+
+            .auth-standalone-footer {
+                margin-top: 3rem;
+                border-top: 1px solid #edf2f7;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .auth-brand-side {
+                display: none;
+            }
+
+            .auth-form-side {
+                min-height: 100vh;
+            }
+
+            .auth-card h2 {
+                font-size: 2rem;
+            }
         }
     </style>
+
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body>
 
-    <div class="auth-card">
-        <h1 class="font-secondary">BelleFood</h1>
-        <p>Sign in or register an account instantly</p>
+    <div class="auth-split-container">
 
-        <div class="role-box">
-            <button class="role-option active" id="btn-customer" onclick="switchRole('customer')">
-                <i class="fas fa-user"></i> Customer
-            </button>
-            <button class="role-option" id="btn-rider" onclick="switchRole('rider')">
-                <i class="fas fa-motorcycle"></i> Rider
-            </button>
+        <div class="auth-brand-side">
+            <img class="brand-side-logo" src="assets/sisi-alase-removebg-preview.png" alt="24/7 BelleFood Logo Asset">
+            <h1 class="brand-side-title">24/7 <span>BelleFood</span></h1>
+            <p style="font-size: 1.1rem; color: #e9ecef; max-width: 420px; line-height: 1.6; margin-top: 0.5rem;">
+                Experience lightning-fast local gourmet shipping & logistics across Lagos anytime, anywhere.
+            </p>
         </div>
 
-        <div id="error-alert" class="error-banner"></div>
+        <div class="auth-form-side">
 
-        <div class="google-container">
-            <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com"
-                data-context="signin" data-ux_mode="popup" data-callback="handleGoogleLogin" data-auto_prompt="false">
+            <div class="auth-card-workspace">
+                <div class="auth-card">
+                    <h2>Welcome Back</h2>
+                    <p style="color: #6c757d; font-size: 0.95rem;">Sign in or register your account profile securely</p>
+
+                    <div class="role-switch-container">
+                        <button id="btn-customer" class="role-btn active" onclick="setRole('customer')">
+                            <i class="fas fa-user"></i> Customer
+                        </button>
+                        <button id="btn-rider" class="role-btn" onclick="setRole('rider')">
+                            <i class="fas fa-motorcycle"></i> Rider
+                        </button>
+                    </div>
+
+                    <div class="google-btn-wrapper">
+                        <div id="g_id_onload" data-client_id="YOUR_GOOGLE_CLIENT_ID_HERE.apps.googleusercontent.com"
+                            data-context="signin" data-ux_mode="popup" data-callback="handleGoogleLogin"
+                            data-auto_prompt="false">
+                        </div>
+
+                        <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline"
+                            data-text="continue_with" data-size="large" data-logo_alignment="left">
+                        </div>
+                    </div>
+
+                    <div>
+                        <a href="index.html" class="back-home-link">
+                            <i class="fas fa-arrow-left"></i> Back to Homepage
+                        </a>
+                    </div>
+                </div>
             </div>
 
-            <div class="g_id_signin" data-type="standard" data-shape="pill" data-theme="outline"
-                data-text="continue_with" data-size="large" data-logo_alignment="left">
-            </div>
+            <footer class="auth-standalone-footer">
+                &copy; 2026 24/7 BelleFood Gateway Portal • Secure Authorization Node
+            </footer>
+
         </div>
 
-        <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> Back to Homepage</a>
     </div>
 
     <script>
         let selectedRole = 'customer';
-        const API_URL = window.location.origin;
 
-        function switchRole(role) {
+        function setRole(role) {
             selectedRole = role;
-            document.getElementById('btn-customer').classList.toggle('active', role === 'customer');
-            document.getElementById('btn-rider').classList.toggle('active', role === 'rider');
+            document.getElementById('btn-customer').classList.remove('active');
+            document.getElementById('btn-rider').classList.remove('active');
+
+            if (role === 'customer') {
+                document.getElementById('btn-customer').classList.add('active');
+            } else {
+                document.getElementById('btn-rider').classList.add('active');
+            }
         }
 
-        async function handleGoogleLogin(googleResponse) {
-            const errorAlert = document.getElementById('error-alert');
-            errorAlert.style.display = 'none';
-
+        async function handleGoogleLogin(response) {
             try {
-                // Submit target token payload directly over to our API route
-                const res = await fetch(`${API_URL}/api/auth/google`, {
+                const serverResponse = await fetch(`${window.location.origin}/api/auth/google`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        credential: googleResponse.credential,
+                        id_token: response.credential,
                         role: selectedRole
                     })
                 });
 
-                const data = await res.json();
+                if (!serverResponse.ok) throw new Error('Authorization challenge failed');
 
-                if (!res.ok) {
-                    throw new Error(data.error || 'Server rejected authentication token request.');
-                }
-
-                // Cache active token and user metadata context natively in local storage
+                const data = await serverResponse.json();
                 localStorage.setItem('bf_token', data.token);
                 localStorage.setItem('bf_user', JSON.stringify(data.user));
 
-                // Direct application view routing depending on assigned role matching metrics
                 if (data.user.role === 'rider') {
                     window.location.href = 'rider-dashboard.html';
                 } else {
-                    window.location.href = 'menu.html';
+                    window.location.href = 'index.html';
                 }
 
             } catch (err) {
-                errorAlert.textContent = `❌ ${err.message}`;
-                errorAlert.style.display = 'block';
+                console.error("Auth Exception Trap:", err);
+                alert("Sign In failed. Ensure your Google Developer Client ID maps correctly!");
             }
         }
     </script>

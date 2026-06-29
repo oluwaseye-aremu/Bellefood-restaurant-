@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rider Portal | 24/7 BelleFood</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.png">
+
+    <style>
+        /* --- BRAND WATERMARK TATTOO EFFECT --- */
+        body {
+            position: relative;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            bottom: -5%;
+            right: -5%;
+            width: 500px;
+            height: 500px;
+            background: url('assets/sisi-alase-removebg-preview.png') no-repeat center center;
+            background-size: contain;
+            opacity: 0.03;
+            /* Faint premium overlay texture */
+            transform: rotate(-15deg);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .main-content-grow {
+            flex: 1;
+        }
+
+        .dashboard-wrapper {
+            max-width: 1200px;
+            margin: 8rem auto 4rem;
+            padding: 0 2rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- LOGO FIXES AND INTEGRATION --- */
+        .navbar .logo img {
+            max-height: 45px;
+            width: auto;
+            vertical-align: middle;
+            margin-right: 12px;
+        }
+
+        .portal-tag {
+            background: #d4af37;
+            color: #1a1a1a;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+            letter-spacing: 1px;
+        }
+
+        /* --- HERO RIDER PROFILE EXPANSION --- */
+        .rider-profile-hero {
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: white;
+            padding: 2.5rem;
+            border-radius: 12px;
+            border-left: 5px solid #d4af37;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .rider-meta {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .rider-meta img {
+            width: 75px;
+            height: 75px;
+            border-radius: 50%;
+            border: 3px solid #d4af37;
+            object-fit: cover;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .rider-meta h2 {
+            font-size: 1.8rem;
+            margin-bottom: 0.2rem;
+            font-family: 'Playfair Display', serif;
+            letter-spacing: 0.5px;
+        }
+
+        .status-toggle-box {
+            background: rgba(255, 255, 255, 0.04);
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        /* --- STATUS SWITCH BUTTONS --- */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 26px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #555;
+            transition: .4s;
+            border-radius: 34px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked+.slider {
+            background-color: #2ecc71;
+        }
+
+        input:checked+.slider:before {
+            transform: translateX(24px);
+        }
+
+        /* --- DASHBOARD PIPELINE GRIDS --- */
+        .pipeline-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 2rem;
+        }
+
+        @media(max-width: 900px) {
+            .pipeline-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .panel {
+            background: white;
+            padding: 2.2rem;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.02);
+            border: 1px solid #edf2f7;
+        }
+
+        .panel h3 {
+            border-bottom: 2px solid #f7fafc;
+            padding-bottom: 0.8rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #2d3748;
+        }
+
+        .order-strip {
+            border: 1px solid #edf2f7;
+            padding: 1.2rem;
+            border-radius: 8px;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+            background: #fff;
+        }
+
+        .order-strip:hover {
+            transform: translateY(-2px);
+            border-color: #d4af37;
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.08);
+        }
+
+        /* --- LOW-PROFILE UTILITY FOOTER --- */
+        .utility-footer {
+            background: #111111;
+            color: #718096;
+            padding: 1.5rem;
+            font-size: 0.85rem;
+            text-align: center;
+            border-top: 1px solid #2d3748;
+            position: relative;
+            z-index: 1;
+            margin-top: 4rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="main-content-grow">
+        <header class="navbar" style="background-color: rgb(26, 26, 26);">
+            <div class="container navbar-container">
+                <a href="index.html" class="logo" style="display: flex; align-items: center; text-decoration: none;">
+                    <img src="assets/sisi-alase-removebg-preview.png" alt="24/7 BelleFood Logo">
+                    <h1 class="font-secondary" style="color: #fff; font-size: 1.7rem; display: inline-block; margin:0;">
+                        BelleFood <span class="portal-tag">Rider Portal</span>
+                    </h1>
+                </a>
+                <ul class="nav-links">
+                    <li><a href="index.html">Home</a></li>
+                    <li><a href="menu.html">Menu</a></li>
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="contact.html">Contact</a></li>
+                </ul>
+            </div>
+        </header>
+
+        <main class="dashboard-wrapper">
+            <section class="rider-profile-hero">
+                <div class="rider-meta">
+                    <img id="rider-avatar" src="https://via.placeholder.com/75" alt="Rider Profile Avatar">
+                    <div>
+                        <h2 id="rider-name">Loading Profile...</h2>
+                        <p style="color: #a0aec0; font-size: 0.95rem;" id="rider-email">rider@bellefood.com</p>
+                    </div>
+                </div>
+
+                <div class="status-toggle-box">
+                    <span id="status-label"
+                        style="font-weight: bold; color: #a0aec0; font-size: 0.9rem; text-transform: uppercase; letter-spacing: 0.5px;">Status:
+                        Offline</span>
+                    <label class="switch">
+                        <input type="checkbox" id="duty-toggle" onchange="toggleDutyStatus()">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            </section>
+
+            <div class="pipeline-grid">
+                <div class="panel">
+                    <h3><i class="fas fa-motorcycle" style="color: #d4af37;"></i> Active Delivery Assignments</h3>
+                    <div id="active-deliveries-container">
+                        <p style="color: #718096;">Scanning for active dispatch items...</p>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3><i class="fas fa-chart-bar" style="color: #d4af37;"></i> Metrics</h3>
+                    <div style="text-align: center; padding: 1.5rem 0;">
+                        <div
+                            style="font-size: 3rem; font-weight: bold; color: #1a1a1a; margin-bottom: 0.2rem; font-family: 'Playfair Display', serif;">
+                            0</div>
+                        <p
+                            style="color: #718096; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">
+                            Completed Today</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="utility-footer">
+        <div class="container">
+            <p>&copy; 2026 24/7 BelleFood Logistics Panel • Secure Portal Session • Version 1.0</p>
+        </div>
+    </footer>
+
+    <script>
+        // --- ROUTING PROTECTION INTERCEPTOR ---
+        const token = localStorage.getItem('bf_token');
+        const userString = localStorage.getItem('bf_user');
+
+        if (!token || !userString) {
+            window.location.href = 'auth.html';
+        }
+
+        const currentUser = JSON.parse(userString);
+        if (currentUser.role !== 'rider') {
+            window.location.href = 'index.html';
+        }
+
+        // --- POPULATE ACCOUNT RECORDS ---
+        document.getElementById('rider-name').textContent = currentUser.name;
+        document.getElementById('rider-email').textContent = currentUser.email;
+        if (currentUser.avatar_url) {
+            document.getElementById('rider-avatar').src = currentUser.avatar_url;
+        }
+
+        // --- PIPELINE DATA HANDLING & PREPARATION ---
+        function toggleDutyStatus() {
+            const toggle = document.getElementById('duty-toggle');
+            const label = document.getElementById('status-label');
+
+            if (toggle.checked) {
+                label.textContent = "Status: Active Duty";
+                label.style.color = "#2ecc71";
+            } else {
+                label.textContent = "Status: Offline";
+                label.style.color = "#a0aec0";
+            }
+        }
+
+        async function fetchAssignedPipelineOrders() {
+            const pipelineContainer = document.getElementById('active-deliveries-container');
+
+            try {
+                const response = await fetch(`${window.location.origin}/api/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    pipelineContainer.innerHTML = `<p style="color: #718096;">No active items assigned on current deployment sweep.</p>`;
+                    return;
+                }
+
+                const orders = await response.json();
+
+                if (orders.length === 0) {
+                    pipelineContainer.innerHTML = `<p style="color: #718096;">No active items assigned on current deployment sweep.</p>`;
+                    return;
+                }
+
+                pipelineContainer.innerHTML = orders.map(order => `
+                    <div class="order-strip">
+                        <div>
+                            <strong style="color: #2d3748;">Order #${order.tracking_id.substring(0, 8)}</strong>
+                            <div style="font-size: 0.85rem; color: #718096; margin-top: 0.2rem;">
+                                <i class="fas fa-map-marker-alt" style="color: #d4af37;"></i> Delivery address context securely restricted
+                            </div>
+                        </div>
+                        <div>
+                            <a href="tracking.html?id=${order.tracking_id}" class="btn btn-secondary btn-sm" style="display:inline-block; padding: 0.4rem 0.8rem; text-decoration: none;">Update Progress</a>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (err) {
+                pipelineContainer.innerHTML = `<p style="color: #718096;">No current delivery assignments found.</p>`;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchAssignedPipelineOrders);
+    </script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>
