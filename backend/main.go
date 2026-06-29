@@ -112,6 +112,39 @@ type Claims struct {
 	jwt.RegisteredClaims
 }
 
+// User represents an account in the system (Admin, Customer, or Rider)
+type User struct {
+	ID         int       `json:"id"`
+	GoogleID   string    `json:"google_id"`
+	Name       string    `json:"name"`
+	Email      string    `json:"email"`
+	Phone      string    `json:"phone"`
+	Role       string    `json:"role"` // 'admin', 'customer', 'rider'
+	AvatarURL  string    `json:"avatar_url"`
+	IsApproved bool      `json:"is_approved"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// Rider contains extra operational details linked to a User profile
+type Rider struct {
+	UserID          int    `json:"user_id"`
+	VehicleType     string `json:"vehicle_type"`
+	VehiclePlate    string `json:"vehicle_plate"`
+	IsAvailable     bool   `json:"is_available"`
+	TotalDeliveries int    `json:"total_deliveries"`
+}
+
+// GoogleClaims maps the incoming token data from a Google OAuth authentication success
+type GoogleClaims struct {
+	ID            string `json:"id"`
+	Email         string `json:"email"`
+	VerifiedEmail bool   `json:"verified_email"`
+	Name          string `json:"name"`
+	GivenName     string `json:"given_name"`
+	FamilyName    string `json:"family_name"`
+	Picture       string `json:"picture"`
+}
+
 // Models
 type MenuItem struct {
 	ID          int       `json:"id"`
