@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Premium Meal Subscriptions | 24/7 BelleFood</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="sub-body">
+
+    <div class="top-bar">
+        <div class="ticker-wrap">
+            <div class="ticker">
+                <div class="ticker-item">Welcome to 24/7 BelleFood - Experience the finest dining in Lagos, open 24
+                    hours.</div>
+                <div class="ticker-item">New Seasonal Menu Now Available!</div>
+                <div class="ticker-item">Meal subscription per month for unlimited food supply and delivery.</div>
+            </div>
+        </div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <a href="index.html" class="logo">
+                <img src="assets/sisi-alase-removebg-preview.jpeg" alt="" style="max-height: 50px; border-radius:50%;">
+                <span>24/7 BelleFood</span>
+            </a>
+            <button class="nav-toggle" aria-label="Toggle navigation">
+                <span class="hamburger"></span>
+            </button>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="menu.html">Menu</a></li>
+                <li style="position: relative;">
+                    <a href="subscriptions.html" class="active">Meal Plans</a>
+                    <span class="badge-new">New</span>
+                </li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="contact.html#reservations" class="btn-reserve">Book a Table</a></li>
+                <li>
+                    <a href="cart.html">
+                        <i class="fas fa-shopping-cart"></i>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="sub-hero-header text-center">
+        <div class="container">
+            <h1>Automated Gourmet Living</h1>
+            <p style="color: #aaa; max-width: 600px; margin: 0 auto; font-size: 1.1rem;">Select your operational cycle,
+                lock in your delivery slots, and enjoy premium nutrition seamlessly. All cycles commence on the closest
+                upcoming Monday.</p>
+        </div>
+    </header>
+
+    <section class="section" style="padding-top: 2rem;">
+        <div class="container">
+
+            <div class="config-card-wrapper">
+
+                <h3 class="config-section-title"><i class="fas fa-calendar-week"
+                        style="color:var(--primary-color); margin-right:8px;"></i> 1. Select Weekly Frequency</h3>
+                <div class="sub-toggle-layout">
+                    <div class="sub-option-node active" id="node-workweek" onclick="changeSchedule('workweek')">
+                        <h4>Corporate Routine</h4>
+                        <p>Monday to Friday delivery sequence. Perfect for office fuel. (20 Days / Month)</p>
+                    </div>
+                    <div class="sub-option-node" id="node-fullweek" onclick="changeSchedule('fullweek')">
+                        <h4>Complete Lifestyle</h4>
+                        <p>Continuous Monday to Sunday coverage. Total kitchen automation. (30 Days / Month)</p>
+                    </div>
+                </div>
+
+                <h3 class="config-section-title"><i class="fas fa-clock"
+                        style="color:var(--primary-color); margin-right:8px;"></i> 2. Choose Daily Delivery Window</h3>
+                <div class="sub-toggle-layout">
+                    <div class="sub-option-node active" id="node-lunch" onclick="changeMealType('lunch')">
+                        <h4>Mid-Day Lunch Run</h4>
+                        <p>Dispatched hot. Arrives fresh directly before 12:30 PM daily.</p>
+                    </div>
+                    <div class="sub-option-node" id="node-dinner" onclick="changeMealType('dinner')">
+                        <h4>Sunset Dinner Run</h4>
+                        <p>Dispatched fresh. Arrives at your residence before 6:30 PM daily.</p>
+                    </div>
+                    <div class="sub-option-node" id="node-both" onclick="changeMealType('both')">
+                        <h4>Dual Manifest (Both)</h4>
+                        <p>Two separate rider delivery runs daily. Lunches and dinners arriving independent and hot.</p>
+                    </div>
+                </div>
+
+                <div class="premium-invoice-panel">
+                    <div class="invoice-meta">
+                        <h4 id="lbl-package-title">Corporate Routine (Mid-Day Lunch)</h4>
+                        <p id="lbl-credit-count"><i class="fas fa-ticket-alt"></i> 20 Subscription Meal Credits
+                            Allocated</p>
+                    </div>
+                    <div class="invoice-pricing-area">
+                        <div class="sub-price-tag" id="lbl-total-price">₦120,000</div>
+                        <button class="btn btn-primary" style="padding: 0.8rem 2.5rem;"
+                            onclick="checkoutSubscription()">Activate Plan</button>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="margin-bottom: 5rem;">
+                <div style="margin-bottom: 2.5rem;">
+                    <h2 style="color:#fff; font-size: 2rem;">Locked Menu Rotation Grid</h2>
+                    <p style="color: #666;">To maintain absolute speed and consistent chef metrics, daily recipes follow
+                        our fixed calendar sequence.</p>
+                </div>
+
+                <h3
+                    style="color:#fff; font-size:1.2rem; margin-bottom:1.5rem; letter-spacing:1px; border-left:3px solid var(--primary-color); padding-left:10px;">
+                    WEEK 1 CONFIGURATION</h3>
+
+                <div class="matrix-grid-shelf">
+                    <div class="matrix-day-card">
+                        <div class="matrix-day-title">Monday</div>
+                        <div class="matrix-meal-title">BelleFood Jollof</div>
+                        <div class="matrix-meal-desc">Quarter Chicken & Fried Plantain</div>
+                    </div>
+                    <div class="matrix-day-card">
+                        <div class="matrix-day-title">Tuesday</div>
+                        <div class="matrix-meal-title">Truffle Risotto</div>
+                        <div class="matrix-meal-desc">Mushroom infusion & parmesan shavings</div>
+                    </div>
+                    <div class="matrix-day-card">
+                        <div class="matrix-day-title">Wednesday</div>
+                        <div class="matrix-meal-title">Pounded Yam</div>
+                        <div class="matrix-meal-desc">Edikang Ikong soup with assorted proteins</div>
+                    </div>
+                    <div class="matrix-day-card">
+                        <div class="matrix-day-title">Thursday</div>
+                        <div class="matrix-meal-title">Shredded Beef Noodles</div>
+                        <div class="matrix-meal-desc">Wok stir-fry mixed peppers & garlic oil</div>
+                    </div>
+                    <div class="matrix-day-card">
+                        <div class="matrix-day-title">Friday</div>
+                        <div class="matrix-meal-title">Pan-Seared Scallops</div>
+                        <div class="matrix-meal-desc">Creamy cauliflower purée & crisp greens</div>
+                    </div>
+                    <div class="matrix-day-card weekend-hold" id="card-sat">
+                        <div class="matrix-day-title">Saturday</div>
+                        <div class="matrix-meal-title" id="txt-sat-meal">Hold</div>
+                        <div class="matrix-meal-desc" id="txt-sat-desc">Weekend Lifestyle Plan Only</div>
+                    </div>
+                    <div class="matrix-day-card weekend-hold" id="card-sun">
+                        <div class="matrix-day-title">Sunday</div>
+                        <div class="matrix-meal-title" id="txt-sun-meal">Hold</div>
+                        <div class="matrix-meal-desc" id="txt-sun-desc">Weekend Lifestyle Plan Only</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <div class="footer-brand-header">
+                        <img src="assets/sisi-alase-removebg-preview.jpeg" alt="24/7 BelleFood Logo">
+                        <h2>24/7 BelleFood</h2>
+                    </div>
+                    <div class="footer-brand-details">
+                        <p class="tagline">Exquisite dining and fast dispatch in the heart of Lagos.</p>
+                        <p class="address"><i class="fas fa-map-marker-alt"
+                                style="color: #d4af37; margin-right: 6px;"></i> Chevron Alternative, Abiola Court 10,
+                            Lagos State.</p>
+                    </div>
+                </div>
+                <div class="footer-links">
+                    <h3>Quick Links</h3>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="menu.html">Menu</a></li>
+                        <li><a href="about.html">About</a></li>
+                        <li><a href="contact.html">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-social">
+                    <h3>Follow Us</h3>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook-f"></i></a>
+                        <a href="https://www.instagram.com/jesusbaby_mitchy"><i class="fab fa-instagram"></i></a>
+                        <a href="https://www.tiktok.com/@king__mitchy"><i class="fab fa-tiktok"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom text-center">
+                <p>&copy; 2026 24/7 BelleFood. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let scheduleState = 'workweek';
+        let mealTypeState = 'lunch';
+
+        function changeSchedule(target) {
+            scheduleState = target;
+            document.getElementById('node-workweek').classList.remove('active');
+            document.getElementById('node-fullweek').classList.remove('active');
+            document.getElementById('node-' + target).classList.add('active');
+            computeMetrics();
+        }
+
+        function changeMealType(target) {
+            mealTypeState = target;
+            document.getElementById('node-lunch').classList.remove('active');
+            document.getElementById('node-dinner').classList.remove('active');
+            document.getElementById('node-both').classList.remove('active');
+            document.getElementById('node-' + target).classList.add('active');
+            computeMetrics();
+        }
+
+        function computeMetrics() {
+            let itemCostValue = 4500;
+            let dispatchCostValue = 1500;
+
+            let daysComputed = (scheduleState === 'workweek') ? 20 : 30;
+            let dispatchesComputed = (mealTypeState === 'both') ? 2 : 1;
+            let elementsComputed = (mealTypeState === 'both') ? 2 : 1;
+
+            let finalInvoiceSum = (itemCostValue * elementsComputed * daysComputed) + (dispatchCostValue * dispatchesComputed * daysComputed);
+
+            document.getElementById('lbl-total-price').innerText = '₦' + finalInvoiceSum.toLocaleString();
+
+            let nameSchedule = (scheduleState === 'workweek') ? 'Corporate Routine' : 'Complete Lifestyle';
+            let nameType = (mealTypeState === 'both') ? 'Dual Manifest (Both)' : (mealTypeState === 'lunch' ? 'Mid-Day Lunch' : 'Sunset Dinner');
+
+            document.getElementById('lbl-package-title').innerText = `${nameSchedule} (${nameType})`;
+            document.getElementById('lbl-credit-count').innerText = ` ${daysComputed * elementsComputed} Subscription Meal Credits Allocated`;
+
+            // Dynamic Calendar Feedback
+            let satCard = document.getElementById('card-sat');
+            let sunCard = document.getElementById('card-sun');
+            if (scheduleState === 'fullweek') {
+                satCard.classList.remove('weekend-hold');
+                sunCard.classList.remove('weekend-hold');
+                document.getElementById('txt-sat-meal').innerText = "Chef's Special Fried Rice";
+                document.getElementById('txt-sat-desc').innerText = "Shredded beef sauce & spring rolls";
+                document.getElementById('txt-sun-meal').innerText = "Premium Wagyu Beef Steak";
+                document.getElementById('txt-sun-desc').innerText = "Grilled to order with custom red wine jus";
+            } else {
+                satCard.classList.add('weekend-hold');
+                sunCard.classList.add('weekend-hold');
+                document.getElementById('txt-sat-meal').innerText = "Hold";
+                document.getElementById('txt-sat-desc').innerText = "Weekend Lifestyle Plan Only";
+                document.getElementById('txt-sun-meal').innerText = "Hold";
+                document.getElementById('txt-sun-desc').innerText = "Weekend Lifestyle Plan Only";
+            }
+        }
+
+        function checkoutSubscription() {
+            alert("Perfect! Routing selections directly to registration checkout workflows...");
+        }
+    </script>
+</body>
+
+</html>

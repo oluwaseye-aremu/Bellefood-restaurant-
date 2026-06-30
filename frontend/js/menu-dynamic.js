@@ -3,8 +3,9 @@ const API_URL = `${window.location.origin}/api`;
 
 let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 let allMenuItems = []; // Store all items globally for search
+let isFetching = false; // Anti-hammering safety latch flag
 
-// --- 1. HELPER FUNCTIONS (Defined First) ---
+// --- 1. HELPER FUNCTIONS ---
 
 function updateSection(sectionId, items) {
     const container = document.getElementById(`${sectionId}-grid`);
@@ -68,17 +69,28 @@ function displayMenuItems(items) {
 // --- 2. MAIN LOAD LOGIC ---
 
 async function loadMenuItems(category = '') {
+    if (isFetching) return; // Block overlapping requests from firing simultaneously
+    isFetching = true;
+
     try {
         const url = category ? `${API_URL}/menu?category=${category}` : `${API_URL}/menu`;
         const response = await fetch(url);
-        if (!response.ok) throw new Error('Network response was not ok');
-        const items = await response.json();
 
+        if (!response.ok) {
+            if (response.status === 429) {
+                throw new Error('Rate limit exceeded. Please wait a moment before refreshing.');
+            }
+            throw new Error(`Server returned status: ${response.status}`);
+        }
+
+        const items = await response.json();
         allMenuItems = items; // Save to global variable
         displayMenuItems(items);
     } catch (error) {
         console.error('Error loading menu:', error);
-        showError('Failed to load menu items. Is the backend running?');
+        showError(error.message || 'Failed to load menu items. Is the backend running?');
+    } finally {
+        isFetching = false; // Open the latch back up
     }
 }
 
@@ -139,15 +151,7 @@ function viewDetails(itemId) {
     if (orderBtn) {
         orderBtn.onclick = () => {
             addToCart(item.id);
-            if (typeof hideModal === 'function') {
-                hideModal();
-            } else {
-                modal.classList.remove('show');
-                setTimeout(() => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = 'auto';
-                }, 300);
-            }
+            hideModal();
         };
     }
 
@@ -177,7 +181,7 @@ function updateCartCount() {
         const navLinks = document.querySelector('.nav-links');
         if (navLinks) {
             const cartItem = document.createElement('li');
-            cartItem.id = 'dynamic-cart-node'; // Added an explicit identifier boundary
+            cartItem.id = 'dynamic-cart-node';
             cartItem.innerHTML = `
                 <a href="cart.html" style="position: relative; display: inline-block; padding: 0.5rem;">
                     <i class="fas fa-shopping-cart"></i>
@@ -185,8 +189,6 @@ function updateCartCount() {
                 </a>
             `;
 
-            // UI SAFEGUARD FIX: Insert the cart icon node right before the dynamic Auth badge 
-            // if an auth badge exists, preventing layout jumping.
             const dynamicAuth = document.getElementById('dynamic-auth-node');
             if (dynamicAuth) {
                 navLinks.insertBefore(cartItem, dynamicAuth);
@@ -204,7 +206,12 @@ function updateCartCount() {
 }
 
 function showNotification(message) {
+    // Remove any existing notification blocks to avoid filling up the layout view space
+    const oldNotification = document.getElementById('dynamic-toast-popup');
+    if (oldNotification) oldNotification.remove();
+
     const notification = document.createElement('div');
+    notification.id = 'dynamic-toast-popup';
     notification.style.cssText = `
         position: fixed;
         top: 100px;
@@ -228,7 +235,12 @@ function showNotification(message) {
 }
 
 function showError(message) {
+    // Remove duplication blocks
+    const oldError = document.getElementById('dynamic-error-toast');
+    if (oldError) oldError.remove();
+
     const error = document.createElement('div');
+    error.id = 'dynamic-error-toast';
     error.style.cssText = `
         position: fixed;
         top: 100px;
@@ -243,7 +255,7 @@ function showError(message) {
     `;
     error.textContent = message;
     document.body.appendChild(error);
-    setTimeout(() => error.remove(), 3000);
+    setTimeout(() => error.remove(), 4000);
 }
 
 function filterByCategory(category) {
@@ -282,15 +294,15 @@ function addCategoryFilters() {
     }
 }
 
-// --- 5. INITIALIZATION ---
+// --- 5. INITIALIZATION RUN ENGINE ---
 
 document.addEventListener('DOMContentLoaded', () => {
-    if (document.getElementById('starters-grid') || document.querySelector('.grid-3')) {
+    // Only run the menu loader if we are actually on the specific menu page view containing the starters section block element
+    if (document.getElementById('starters-grid') || window.location.pathname.includes('menu.html')) {
         createSectionGrids();
         loadMenuItems();
         addCategoryFilters();
 
-        // ATTACH SEARCH LISTENER
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', handleSearch);
@@ -299,7 +311,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCartCount();
 });
 
-// Animations
+// Animations styling rules injection
 const style = document.createElement('style');
 style.textContent = `
     @keyframes slideIn {

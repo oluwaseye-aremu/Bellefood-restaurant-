@@ -121,7 +121,6 @@ img {
     padding: 0.4rem 1.2rem;
     font-size: 0.85rem;
     border-radius: 50px;
-    /* Fully rounded */
 }
 
 .btn-primary {
@@ -203,16 +202,16 @@ img {
     }
 }
 
-/* Navbar */
 .navbar {
     position: fixed;
     top: 35px;
-    /* Height of top bar */
     left: 0;
     width: 100%;
-    background-color: rgba(26, 26, 26, 0.95);
-    padding: 1rem 0;
+    background-color: rgba(17, 17, 17, 0.98);
+    /* Solidified premium dark glass look */
+    padding: 0.8rem 0;
     z-index: 1000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     transition: var(--transition);
 }
 
@@ -220,30 +219,58 @@ img {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    width: 100%;
+    max-width: 94%;
+    margin: 0 auto;
+    padding: 0;
 }
+
+.nav-toggle {
+    display: none;
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
 
 .logo {
     font-family: var(--font-heading);
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     font-weight: 700;
     color: var(--primary-color);
-    letter-spacing: 2px;
+    letter-spacing: 1px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .nav-links {
     display: flex;
     align-items: center;
+    gap: 1.2rem;
+    /* Clean even spacing across items */
+    margin: 0;
+    padding: 0;
+    list-style: none;
 }
 
 .nav-links li {
-    margin-left: 2rem;
+    margin-left: 0 !important;
+    /* CRITICAL FIX: Erases the overlapping double spacing */
+    position: relative;
+    display: flex;
+    align-items: center;
 }
 
 .nav-links a {
     color: var(--light-text);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 1px;
+    white-space: nowrap;
+    /* Prevents text splitting onto multiple lines */
+    padding: 0.5rem 0.2rem;
 }
 
 .nav-links a:hover,
@@ -253,8 +280,10 @@ img {
 
 .btn-reserve {
     border: 1px solid var(--primary-color);
-    padding: 0.5rem 1.5rem;
+    padding: 0.5rem 1rem !important;
     color: var(--primary-color) !important;
+    border-radius: 4px;
+    white-space: nowrap;
 }
 
 .btn-reserve:hover {
@@ -262,11 +291,40 @@ img {
     color: var(--secondary-color) !important;
 }
 
-.nav-toggle {
-    display: none;
-    background: none;
-    border: none;
-    cursor: pointer;
+/* --- GLOWING FLOATING NEW BADGE --- */
+.badge-new {
+    background-color: var(--primary-color);
+    color: #fff !important;
+    font-size: 0.58rem !important;
+    font-weight: 900;
+    font-family: var(--font-body);
+    text-transform: uppercase;
+    padding: 1px 5px;
+    border-radius: 3px;
+    position: absolute;
+    top: -10px;
+    right: -5px;
+    letter-spacing: 0px;
+    box-shadow: 0 0 10px var(--primary-color);
+    animation: pulseGlow 2s infinite ease-in-out;
+    line-height: 1.2;
+}
+
+@keyframes pulseGlow {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 4px var(--primary-color);
+    }
+
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 0 12px var(--primary-color);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 4px var(--primary-color);
+    }
 }
 
 .hamburger {
@@ -319,7 +377,6 @@ img {
 .hero-content {
     position: relative;
     z-index: 10;
-    /* Make sure text is above overlay */
 }
 
 .slide {
@@ -567,7 +624,6 @@ img {
 /* Section Backgrounds */
 .bg-pattern {
     background-image: url('https://www.transparenttextures.com/patterns/cubes.png');
-    /* Subtle pattern */
     background-color: var(--light-bg);
 }
 
@@ -592,6 +648,7 @@ img {
     background-attachment: fixed;
 }
 
+/* --- UPDATED & FIXED FOOTER BASE --- */
 .footer {
     background-color: #111;
     color: #aaa;
@@ -604,14 +661,53 @@ img {
     grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
     gap: 2rem;
     margin-bottom: 3rem;
+    align-items: start;
 }
 
-.footer-logo h2 {
+.footer-brand-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 1.2rem;
+}
+
+.footer-brand-header img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid var(--primary-color);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+}
+
+.footer-brand-header h2 {
     color: var(--primary-color);
+    margin: 0;
+    font-size: 1.6rem;
+    line-height: 1;
+}
+
+.footer-brand-details p {
+    margin: 0 0 0.8rem 0 !important;
+    line-height: 1.6;
+    font-size: 0.95rem;
+    color: #aaa;
+}
+
+.footer-links ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 }
 
 .footer-links ul li {
     margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+    color: #aaa;
+    text-decoration: none;
+    transition: color 0.2s ease;
 }
 
 .footer-links a:hover {
@@ -628,16 +724,25 @@ img {
     line-height: 40px;
     border-radius: 50%;
     margin-right: 0.5rem;
+    transition: all 0.2s ease;
 }
 
 .social-icons a:hover {
     background: var(--primary-color);
+    transform: translateY(-2px);
 }
 
 .footer-bottom {
     border-top: 1px solid #333;
     padding: 1.5rem 0;
     font-size: 0.9rem;
+}
+
+.footer-links h3,
+.footer-social h3 {
+    color: var(--primary-color);
+    font-size: 1.2rem;
+    margin-bottom: 1.2rem;
 }
 
 /* Modal */
@@ -718,7 +823,7 @@ img {
     margin: 1rem 0;
 }
 
-/* Responsive */
+/* Responsive Media Queries */
 @media (max-width: 768px) {
     .nav-toggle {
         display: block;
@@ -771,5 +876,207 @@ img {
 
     .modal-img {
         height: 250px;
+    }
+}
+
+/* --- PREMIUM SUBSCRIPTION ENGINE STYLING --- */
+.sub-body {
+    background-color: #0a0a0a;
+    color: #f5f5f5;
+}
+
+.sub-hero-header {
+    background: linear-gradient(rgba(0, 0, 0, 0.8), #0a0a0a), url('https://images.unsplash.com/photo-1543339308-43e59d6b73a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');
+    background-size: cover;
+    background-position: center;
+    padding: 10rem 0 4rem;
+    text-center: center;
+}
+
+.sub-hero-header h1 {
+    color: #fff;
+    font-size: 3.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.config-card-wrapper {
+    background: #111111;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 3rem;
+    border-radius: 16px;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+    margin-bottom: 5rem;
+}
+
+.config-section-title {
+    color: #fff;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 1rem;
+}
+
+.sub-toggle-layout {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+}
+
+.sub-option-node {
+    flex: 1;
+    background: #161616;
+    border: 2px solid #222;
+    padding: 1.5rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    text-align: left;
+    position: relative;
+}
+
+.sub-option-node:hover {
+    border-color: #444;
+    transform: translateY(-2px);
+}
+
+.sub-option-node.active {
+    border-color: var(--primary-color);
+    background: rgba(230, 0, 0, 0.03);
+}
+
+.sub-option-node.active::after {
+    content: '\f058';
+    font-family: 'Font Awesome 5 Free';
+    font-weight: 900;
+    color: var(--primary-color);
+    position: absolute;
+    top: 1.2rem;
+    right: 1.2rem;
+    font-size: 1.2rem;
+}
+
+.sub-option-node h4 {
+    color: #fff;
+    margin-bottom: 0.2rem;
+    font-size: 1.1rem;
+}
+
+.sub-option-node p {
+    font-size: 0.85rem;
+    color: #888;
+    line-height: 1.4;
+}
+
+/* Master Invoice Box */
+.premium-invoice-panel {
+    background: linear-gradient(135deg, #161616, #121212);
+    border-left: 4px solid var(--primary-color);
+    padding: 2.5rem;
+    border-radius: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 3rem;
+}
+
+.invoice-meta h4 {
+    color: #fff;
+    font-size: 1.3rem;
+    margin-bottom: 0.4rem;
+}
+
+.invoice-meta p {
+    color: var(--primary-color);
+    font-weight: 700;
+    font-size: 0.9rem;
+}
+
+.invoice-pricing-area {
+    text-align: right;
+}
+
+.sub-price-tag {
+    font-size: 3.5rem;
+    font-family: var(--font-heading);
+    color: #d4af37;
+    font-weight: 700;
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+/* Calendar Track Styles */
+.matrix-grid-shelf {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 1rem;
+    margin-bottom: 4rem;
+}
+
+.matrix-day-card {
+    background: #111;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    padding: 1.2rem 1rem;
+    transition: var(--transition);
+}
+
+.matrix-day-card:hover {
+    border-color: rgba(255, 255, 255, 0.1);
+    background: #141414;
+}
+
+.matrix-day-title {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #888;
+    margin-bottom: 0.8rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 0.4rem;
+}
+
+.matrix-meal-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.3;
+}
+
+.matrix-meal-desc {
+    font-size: 0.8rem;
+    color: #666;
+    margin-top: 0.3rem;
+}
+
+.matrix-day-card.weekend-hold {
+    background: #0d0d0d;
+    opacity: 0.6;
+}
+
+@media (max-width: 992px) {
+    .matrix-grid-shelf {
+        grid-template-columns: repeat(4, 1fr);
+    }
+
+    .sub-toggle-layout {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .premium-invoice-panel {
+        flex-direction: column;
+        text-align: center;
+        gap: 1.5rem;
+    }
+
+    .invoice-pricing-area {
+        text-align: center;
+        width: 100%;
+    }
+}
+
+@media (max-width: 576px) {
+    .matrix-grid-shelf {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

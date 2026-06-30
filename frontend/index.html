@@ -37,29 +37,34 @@
 
 <body>
 
-    <!-- Top Bar -->
     <div class="top-bar">
         <div class="ticker-wrap">
             <div class="ticker">
-                <div class="ticker-item">Welcome to 24/7 BelleFood - Experience the finest dining in Lagos, open 24 hours.
-                </div>
+                <div class="ticker-item">Welcome to 24/7 BelleFood - Experience the finest dining in Lagos, open 24
+                    hours.</div>
                 <div class="ticker-item">New Seasonal Menu Now Available!</div>
-                <div class="ticker-item">Live Jazz every Friday night.</div>
-                <div class="ticker-item">Book your private events with us today.</div>
+                <div class="ticker-item">Meal subscription per month for unlimited food supply and delivery.</div>
+                <div class="ticker-item">Book your private space with us today.</div>
             </div>
         </div>
     </div>
 
-    <!-- Navigation -->
     <nav class="navbar">
         <div class="container nav-container">
-            <a href="index.html" class="logo"><img src="assets/sisi-alase-removebg-preview.png" alt=""><span>24/7 BelleFood</span></a>
+            <a href="index.html" class="logo">
+                <img src="assets/sisi-alase-removebg-preview.jpeg" alt="24/7 BelleFood Logo">
+                <span>24/7 BelleFood</span>
+            </a>
             <button class="nav-toggle" aria-label="Toggle navigation">
                 <span class="hamburger"></span>
             </button>
             <ul class="nav-links">
                 <li><a href="index.html" class="active">Home</a></li>
                 <li><a href="menu.html">Menu</a></li>
+                <li class="nav-item-new">
+                    <a href="subscriptions.html">Meal Plans</a>
+                    <span class="badge-new">New</span>
+                </li>
                 <li><a href="about.html">About</a></li>
                 <li><a href="contact.html">Contact</a></li>
                 <li><a href="contact.html#reservations" class="btn-reserve">Book a Table</a></li>
@@ -73,19 +78,13 @@
         </div>
     </nav>
 
-    <!-- Section 1: Hero -->
     <header class="hero" id="home">
         <div class="hero-slider">
-            <!-- Background images will be injected/managed by JS or CSS -->
-            <div class="slide active"
-                style="background-image: url('assets/bellefood_jollof.png');">
-            </div>
+            <div class="slide active" style="background-image: url('assets/bellefood_jollof.png');"></div>
             <div class="slide"
                 style="background-image: url('https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
             </div>
-            <div class="slide"
-                style="background-image: url('assets/bellefood_delivery.png');">
-            </div>
+            <div class="slide" style="background-image: url('assets/bellefood_delivery.png');"></div>
             <div class="slide"
                 style="background-image: url('https://images.unsplash.com/photo-1550966871-3ed3c47e2ce2?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80');">
             </div>
@@ -106,16 +105,15 @@
         </div>
     </header>
 
-    <!-- Section 2: About Teaser -->
     <section class="section about-teaser">
         <div class="container">
             <div class="row">
                 <div class="col-text">
                     <h2 class="section-title">Our Story</h2>
-                    <p>Founded by King Mitchy, 24/7 BelleFood has been a beacon of culinary excellence in Lagos. We believe in the power of
-                        great food to bring people together anytime, day or night. Our philosophy is simple: fresh ingredients, masterful
-                        techniques, and a passion for flavor.</p>
-                    <a href="about.html" class="text-link">Read more about us &rarr;</a>
+                    <p>Founded by King Mitchy, 24/7 BelleFood has been a beacon of culinary excellence in Lagos. We
+                        believe in the power of great food to bring people together anytime, day or night. Our
+                        philosophy is simple: fresh ingredients, masterful techniques, and a passion for flavor.</p>
+                    <a href="about.html" class="text-link">Read more about us →</a>
                 </div>
                 <div class="col-image">
                     <img src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
@@ -125,7 +123,6 @@
         </div>
     </section>
 
-    <!-- Section 3: Featured Dishes -->
     <section class="section featured-dishes bg-light">
         <div class="container">
             <h2 class="section-title text-center">Signature Dishes</h2>
@@ -167,7 +164,43 @@
         </div>
     </section>
 
-    <!-- Section 4: CEO's Welcome -->
+    <section class="section subscription-teaser bg-dark text-white">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-text">
+                    <span class="subtitle-accent"
+                        style="color: #d4af37; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">BelleFood
+                        Premium</span>
+                    <h2 class="section-title text-white" style="margin-top: 0.5rem;">Automate Your Daily Meals</h2>
+                    <p>Don't let a busy schedule or Lagos traffic compromise your nutrition. Join our **Monthly Meal
+                        Subscription** and get chef-curated meals delivered fresh to your office or doorstep exactly
+                        when you want them.</p>
+
+                    <ul class="benefit-list" style="margin: 1.5rem 0; padding-left: 0; list-style: none;">
+                        <li style="margin-bottom: 0.8rem;"><i class="fas fa-check-circle"
+                                style="color: #d4af37; margin-right: 10px;"></i> 20 or 30 Days Flexible Credit Plans
+                        </li>
+                        <li style="margin-bottom: 0.8rem;"><i class="fas fa-check-circle"
+                                style="color: #d4af37; margin-right: 10px;"></i> Separate Fresh Deliveries for Lunch &
+                            Dinner</li>
+                        <li style="margin-bottom: 0.8rem;"><i class="fas fa-check-circle"
+                                style="color: #d4af37; margin-right: 10px;"></i> Full Admin Control to Pause/Resume your
+                            days anytime</li>
+                    </ul>
+
+                    <a href="subscriptions.html" class="btn btn-primary"
+                        style="background-color: #e60000; color: #fff; border: none;">Explore Subscription Plans</a>
+                </div>
+                <div class="col-image">
+                    <img src="https://images.unsplash.com/photo-1543339308-43e59d6b73a6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                        alt="Monthly Meal Prep Box" class="img-responsive rounded shadow"
+                        style="border: 3px solid #333;">
+                </div>
+            </div>
+        </div>
+    </section>
+
+
     <section class="section chef-welcome">
         <div class="container">
             <div class="row reverse-mobile">
@@ -176,7 +209,9 @@
                 </div>
                 <div class="col-text">
                     <h2 class="section-title">Meet Our CEO, King Mitchy</h2>
-                    <p>"Food is an expression of our rich culture, and feeding people is a passion. I strive to create an environment where every meal satisfies your cravings, whether you dine in with us or have it dispatched to your door, 24/7."</p>
+                    <p>"Food is an expression of our rich culture, and feeding people is a passion. I strive to create
+                        an environment where every meal satisfies your cravings, whether you dine in with us or have it
+                        dispatched to your door, 24/7."</p>
                     <br>
                     <p class="signature">- King Mitchy -</p>
                 </div>
@@ -184,7 +219,6 @@
         </div>
     </section>
 
-    <!-- Section 5: Services -->
     <section class="section services bg-dark text-white">
         <div class="container">
             <h2 class="section-title text-center">Our Services</h2>
@@ -208,7 +242,6 @@
         </div>
     </section>
 
-    <!-- Section 6: Testimonials -->
     <section class="section testimonials">
         <div class="container">
             <h2 class="section-title text-center">Guest Reviews</h2>
@@ -218,26 +251,23 @@
                         food is divine."</p>
                     <cite>- Aremu Oluwaseye - </cite>
                 </div>
-                <!-- More testimonials can be added via JS or static -->
             </div>
         </div>
     </section>
 
-    <!-- Section 7: Photo Gallery -->
     <section class="section gallery no-padding">
         <div class="gallery-grid">
             <div class="gallery-item"><img
                     src="https://images.unsplash.com/photo-1559339352-11d035aa65de?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
                     alt="Gallery 1"></div>
-            <div class="gallery-item"><img src=assets/ambience1.jpeg alt="Gallery 2"></div>
-            <div class="gallery-item"><img src=assets/ambience2.jpeg alt="Gallery 3"></div>
+            <div class="gallery-item"><img src="assets/ambience1.jpeg" alt="Gallery 2"></div>
+            <div class="gallery-item"><img src="assets/ambience2.jpeg" alt="Gallery 3"></div>
             <div class="gallery-item"><img
                     src="https://images.unsplash.com/photo-1552566626-52f8b828add9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"
                     alt="Gallery 4"></div>
         </div>
     </section>
 
-    <!-- Section 8: Opening Hours -->
     <section class="section hours bg-light">
         <div class="container text-center">
             <h2 class="section-title">Opening Hours</h2>
@@ -249,7 +279,6 @@
         </div>
     </section>
 
-    <!-- Section 9: Newsletter -->
     <section class="section newsletter bg-accent text-white">
         <div class="container text-center">
             <h2 class="section-title text-white">Join Our Newsletter</h2>
@@ -261,28 +290,37 @@
         </div>
     </section>
 
-    <!-- Section 10: Location -->
     <section class="section location">
         <div class="container">
             <h2 class="section-title text-center">Find Us</h2>
-            <div class="map-container">
-                <!-- Placeholder for map -->
+            <div class="map-container"
+                style="border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.08);">
                 <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3022.1422937950147!2d-73.98731968482413!3d40.75889497932681!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x89c25855c6480299%3A0x55194ec5a1ae072e!2sTimes%20Square!5e0!3m2!1sen!2sus!4v1622549400000!5m2!1sen!2sus"
-                    width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy"></iframe>
+                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3964.729177114668!2d3.528373374245648!3d6.428841424197775!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x103bf7140e69882d%3A0x6730b20593649fc1!2sChevron%20Alternative%20Route%2C%20Lekki%2C%20Lagos!5e0!3m2!1sen!2sng!4v1719736000000!5m2!1sen!2sng"
+                    width="100%" height="400" style="border:0; display: block;" allowfullscreen="" loading="lazy"
+                    referrerpolicy="no-referrer-when-downgrade">
+                </iframe>
             </div>
         </div>
     </section>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
+
                 <div class="footer-logo">
-                    <h2>24/7 BelleFood</h2>
-                    <p>Exquisite dining and fast dispatch in the heart of Lagos.</p>
-                    <p>Chevron Alternative, Abiola Court 10, Lagos State.</p>
+                    <div class="footer-brand-header">
+                        <img src="assets/sisi-alase-removebg-preview.jpeg" alt="24/7 BelleFood Logo">
+                        <h2>24/7 BelleFood</h2>
+                    </div>
+                    <div class="footer-brand-details">
+                        <p class="tagline">Exquisite dining and fast dispatch in the heart of Lagos.</p>
+                        <p class="address"><i class="fas fa-map-marker-alt"
+                                style="color: #d4af37; margin-right: 6px;"></i> Chevron Alternative, Abiola Court 10,
+                            Lagos State.</p>
+                    </div>
                 </div>
+
                 <div class="footer-links">
                     <h3>Quick Links</h3>
                     <ul>
@@ -292,6 +330,7 @@
                         <li><a href="contact.html">Contact</a></li>
                     </ul>
                 </div>
+
                 <div class="footer-social">
                     <h3>Follow Us</h3>
                     <div class="social-icons">
@@ -300,9 +339,10 @@
                         <a href="https://www.tiktok.com/@king__mitchy"><i class="fab fa-tiktok"></i></a>
                     </div>
                 </div>
+
             </div>
             <div class="footer-bottom text-center">
-                <p>&copy; 2025 24/7 BelleFood. All rights reserved.</p>
+                <p>© 2025 24/7 BelleFood. All rights reserved.</p>
             </div>
         </div>
     </footer>
