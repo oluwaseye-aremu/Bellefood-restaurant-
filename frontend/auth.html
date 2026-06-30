@@ -264,7 +264,7 @@
     <div class="auth-split-container">
 
         <div class="auth-brand-side">
-            <img class="brand-side-logo" src="assets/sisi-alase-removebg-preview.png" alt="24/7 BelleFood Logo Asset">
+            <img class="brand-side-logo" src="assets/sisi-alase-removebg-preview.jpeg" alt="24/7 BelleFood Logo Asset">
             <h1 class="brand-side-title">24/7 <span>BelleFood</span></h1>
             <p style="font-size: 1.1rem; color: #e9ecef; max-width: 420px; line-height: 1.6; margin-top: 0.5rem;">
                 Experience lightning-fast local gourmet shipping & logistics across Lagos anytime, anywhere.
@@ -336,12 +336,18 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
+                        // Send every common naming variation to satisfy the Go backend structural schema
                         id_token: response.credential,
+                        token: response.credential,
+                        credential: response.credential,
                         role: selectedRole
                     })
                 });
 
-                if (!serverResponse.ok) throw new Error('Authorization challenge failed');
+                if (!serverResponse.ok) {
+                    const errorText = await serverResponse.text();
+                    throw new Error(errorText || `Server responded with status ${serverResponse.status}`);
+                }
 
                 const data = await serverResponse.json();
                 localStorage.setItem('bf_token', data.token);
@@ -355,7 +361,7 @@
 
             } catch (err) {
                 console.error("Auth Exception Trap:", err);
-                alert("Sign In failed. Ensure your Google Developer Client ID maps correctly!");
+                alert(`Backend Server Error:\n${err.message}`);
             }
         }
     </script>

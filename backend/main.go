@@ -118,7 +118,7 @@ type User struct {
 	GoogleID   string    `json:"google_id"`
 	Name       string    `json:"name"`
 	Email      string    `json:"email"`
-	Phone      string    `json:"phone"`
+	Phone      *string   `json:"phone"`
 	Role       string    `json:"role"` // 'admin', 'customer', 'rider'
 	AvatarURL  string    `json:"avatar_url"`
 	IsApproved bool      `json:"is_approved"`

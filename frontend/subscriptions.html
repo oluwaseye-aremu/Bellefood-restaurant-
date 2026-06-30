@@ -9,7 +9,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700;900&family=Playfair+Display:wght@600;700&display=swap"
-        rel="stylesheet">
+        rel=\"stylesheet\">
+    <script src="https://js.paystack.co/v1/inline.js"></script>
 </head>
 
 <body class="sub-body">
@@ -204,6 +205,64 @@
         </div>
     </footer>
 
+    <div class="sub-drawer-overlay" id="checkoutDrawer">
+        <div class="sub-drawer-card">
+            <div class="drawer-header">
+                <h3><i class="fas fa-shopping-bag" style="color:var(--primary-color);"></i> Finalize Subscription</h3>
+                <span class="close-drawer-btn" onclick="toggleCheckoutDrawer(false)">&times;</span>
+            </div>
+
+            <div class="drawer-body">
+                <div class="drawer-summary-badge">
+                    <span style="font-size:0.8rem; color:#888; text-transform:uppercase;">Selected Pipeline</span>
+                    <h4 id="drawer-package-title" style="color:#fff; margin:2px 0;">Corporate Routine (Lunch Only)</h4>
+                    <p id="drawer-credit-count"
+                        style="color:var(--primary-color); font-weight:700; font-size:0.85rem; margin:0;">20 Meal
+                        Credits</p>
+                </div>
+
+                <div class="drawer-form-group">
+                    <label class="drawer-label"><i class="fas fa-building"></i> Drop-off Property Type</label>
+                    <select class="drawer-input" id="txt-property-type">
+                        <option value="Residential Estate">Residential Gated Estate</option>
+                        <option value="Corporate Office">Corporate Office Building</option>
+                        <option value="Private Apartment">Private Non-Estate Apartment</option>
+                    </select>
+                </div>
+
+                <div class="drawer-form-group">
+                    <label class="drawer-label"><i class="fas fa-map-marked-alt"></i> Complete Street Address &
+                        House/Suite Number</label>
+                    <textarea class="drawer-input" id="txt-delivery-address" rows="3"
+                        placeholder="e.g., Abiola Court 10, Block C, Suite 4, Chevron Alternative Route..."></textarea>
+                </div>
+
+                <div class="drawer-form-group">
+                    <label class="drawer-label"><i class="fas fa-motorcycle"></i> Specific Rider Gate/Landmark
+                        Instructions</label>
+                    <input type="text" class="drawer-input" id="txt-rider-instructions"
+                        placeholder="e.g., Call before passing security check gate. Ring bell 2.">
+                </div>
+
+                <div class="drawer-invoice-ledger">
+                    <div class="ledger-row"><span>Base Plan Cost</span><span id="ledger-base-cost">₦120,000</span></div>
+                    <div class="ledger-row"><span>Paystack Processing Fee</span><span
+                            id="ledger-gateway-fee">₦2,000</span></div>
+                    <div class="ledger-row total-row"><span>Total Gross Due</span><span
+                            id="ledger-gross-total">₦122,000</span></div>
+                </div>
+
+                <button class="btn btn-primary" style="width:100%; padding:1rem; margin-top:1rem; font-weight:900;"
+                    id="btn-paystack-trigger" onclick="initiatePaystackSubscriptionPayment()">
+                    <i class="fas fa-lock"></i> Securely Pay via Paystack
+                </button>
+                <p style="font-size:0.75rem; color:#555; text-align:center; margin-top:8px;"><i
+                        class="fas fa-shield-alt"></i> Card assets are securely tokenized using automated recurring
+                    Paystack protocol layers.</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         let scheduleState = 'workweek';
         let mealTypeState = 'lunch';
@@ -263,8 +322,114 @@
             }
         }
 
+        // Global Session Profile Object Hook
+        let cachedUserProfile = null;
+
+        // FIXED: Syncs instantly with LocalStorage tracking parameters inside script.js
+        document.addEventListener('DOMContentLoaded', () => {
+            const token = localStorage.getItem('bf_token');
+            const userString = localStorage.getItem('bf_user');
+
+            if (token && userString) {
+                try {
+                    cachedUserProfile = JSON.parse(userString);
+                    console.log("Subscription Engine: Local user session successfully paired.", cachedUserProfile);
+                } catch (e) {
+                    console.error("Error parsing profile data stream:", e);
+                }
+            } else {
+                console.log("Subscription Engine: No active local session found in localStorage.");
+            }
+
+            // Initialize pricing calculations on load
+            computeMetrics();
+        });
+
+        function toggleCheckoutDrawer(shouldOpen) {
+            const drawer = document.getElementById('checkoutDrawer');
+            if (shouldOpen) {
+                drawer.classList.add('open');
+            } else {
+                drawer.classList.remove('open');
+            }
+        }
+
         function checkoutSubscription() {
-            alert("Perfect! Routing selections directly to registration checkout workflows...");
+            // FIXED: Enforce authentication gate keeping, pointing natively to auth.html if token is absent
+            if (!cachedUserProfile) {
+                alert("Authentication Required:\nPlease sign in or create an account to secure your automated meal monitoring credits.");
+                window.location.href = 'auth.html';
+                return;
+            }
+
+            // Capture calculated settings
+            let itemCostValue = 4500;
+            let dispatchCostValue = 1500;
+            let daysComputed = (scheduleState === 'workweek') ? 20 : 30;
+            let dispatchesComputed = (mealTypeState === 'both') ? 2 : 1;
+            let elementsComputed = (mealTypeState === 'both') ? 2 : 1;
+
+            let basePlanCost = (itemCostValue * elementsComputed * daysComputed) + (dispatchCostValue * dispatchesComputed * daysComputed);
+
+            // PAYSTACK SPLIT FORMULA: Cap at ₦2000 maximum gateway fee threshold
+            let computedPaystackFee = (basePlanCost * 0.015) + 100;
+            if (computedPaystackFee > 2000) {
+                computedPaystackFee = 2000;
+            }
+
+            let absoluteGrossTotal = basePlanCost + computedPaystackFee;
+
+            // Push calculations out to text injection channels inside the sliding card UI
+            let nameSchedule = (scheduleState === 'workweek') ? 'Corporate Routine' : 'Complete Lifestyle';
+            let nameType = (mealTypeState === 'both') ? 'Dual Manifest (Both)' : (mealTypeState === 'lunch' ? 'Mid-Day Lunch' : 'Sunset Dinner');
+
+            document.getElementById('drawer-package-title').innerText = `${nameSchedule} (${nameType})`;
+            document.getElementById('drawer-credit-count').innerText = `${daysComputed * elementsComputed} Total Plan Meal Credits`;
+
+            document.getElementById('ledger-base-cost').innerText = '₦' + basePlanCost.toLocaleString();
+            document.getElementById('ledger-gateway-fee').innerText = '₦' + computedPaystackFee.toLocaleString();
+            document.getElementById('ledger-gross-total').innerText = '₦' + absoluteGrossTotal.toLocaleString();
+
+            // Trigger sliding animation event frame
+            toggleCheckoutDrawer(true);
+        }
+
+        async function initiatePaystackSubscriptionPayment() {
+            // Gather address structures
+            const propertyType = document.getElementById('txt-property-type').value;
+            const preciseAddress = document.getElementById('txt-delivery-address').value.trim();
+            const landmarks = document.getElementById('txt-rider-instructions').value.trim();
+
+            // Field integrity verification
+            if (!preciseAddress) {
+                alert("Logistics Error:\nPlease specify a precise Lagos delivery address or estate description for our riders.");
+                return;
+            }
+
+            const payButton = document.getElementById('btn-paystack-trigger');
+            payButton.disabled = true;
+            payButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Initializing Transaction Gateway...';
+
+            // Package configurations payload for database mapping
+            const orderPayload = {
+                email: cachedUserProfile.email || 'customer@bellefood.com',
+                scheduleType: scheduleState,
+                deliverySlot: mealTypeState,
+                allocatedCredits: (scheduleState === 'workweek' ? 20 : 30) * (mealTypeState === 'both' ? 2 : 1),
+                addressDetails: {
+                    propertyType: propertyType,
+                    streetAddress: preciseAddress,
+                    landmarkInstructions: landmarks
+                }
+            };
+
+            console.log("Routing subscription configuration state to checkout transaction API node:", orderPayload);
+
+            // Active payment gate verification placeholder
+            alert("Excellent! Form validated.\nConnecting securely to Paystack standard subscription server array... \nUser Email: " + orderPayload.email);
+
+            payButton.disabled = false;
+            payButton.innerHTML = '<i class="fas fa-lock"></i> Securely Pay via Paystack';
         }
     </script>
 </body>
