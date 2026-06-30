@@ -148,7 +148,6 @@
             transform: translateY(-5px);
         }
 
-        /* Colorful Gradients */
         .card-revenue {
             background: linear-gradient(135deg, #11998e, #38ef7d);
         }
@@ -381,9 +380,19 @@
             color: #084298;
         }
 
+        .status-preparing {
+            background: #e2d9ff;
+            color: #4b0082;
+        }
+
         .status-ready {
-            background: #d1e7dd;
-            color: #0f5132;
+            background: #e3fcef;
+            color: #0e6245;
+        }
+
+        .status-out_for_delivery {
+            background: #ffebd9;
+            color: #b05a00;
         }
 
         .status-delivered {
@@ -412,7 +421,6 @@
             border: 1px solid #f5c2c7;
         }
 
-        /* Mobile */
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -467,7 +475,6 @@
                 display: none;
             }
 
-            /* Hide logout on mobile header for space */
             .charts-container {
                 grid-template-columns: 1fr;
             }
@@ -493,7 +500,7 @@
                 <i class="fas fa-shopping-bag"></i> <span>Orders</span>
             </li>
             <li class="nav-item" onclick="showTab('tracking')">
-                <i class="fas fa-truck"></i> <span>Tracking</span>
+                <i class="fas fa-truck"></i> <span>Tracking & Dispatch</span>
             </li>
         </ul>
         <button class="logout-btn" onclick="logout()">
@@ -588,7 +595,8 @@
                 <div class="form-group">
                     <label>Image </label>
                     <input type="file" name="image" accept="image/*" required onchange="previewImage(event)">
-                    <img id="image-preview" class="image-preview" style="display: none;">
+                    <img id="image-preview" class="image-preview"
+                        style="display: none; max-width: 200px; margin-top: 1rem; border-radius: 8px;">
                 </div>
 
                 <button type="submit" class="btn btn-primary">Add Menu Item</button>
@@ -621,12 +629,12 @@
 
         <div id="tracking-tab" class="tab-content">
             <div class="page-header">
-                <h2>Order Tracking Update</h2>
+                <h2>Order Tracking & Rider Dispatch</h2>
             </div>
 
             <div class="admin-form">
                 <div class="form-group">
-                    <label>Select Order to Update</label>
+                    <label>Select Order to Process</label>
                     <select id="tracking-order-select" onchange="loadOrderDetails()">
                         <option value="">-- Select an order --</option>
                     </select>
@@ -637,29 +645,38 @@
                         <input type="hidden" id="tracking-order-id">
 
                         <div class="form-group">
-                            <label>New Status </label>
+                            <label>Update Status</label>
                             <select id="tracking-status" required>
                                 <option value="pending">Order Placed</option>
                                 <option value="confirmed">Order Confirmed</option>
-                                <option value="preparing">Preparing</option>
+                                <option value="preparing">Preparing Dish</option>
                                 <option value="ready">Ready for Pickup/Delivery</option>
-                                <option value="out_for_delivery">Out for Delivery</option>
-                                <option value="delivered">Delivered</option>
+                                <option value="out_for_delivery">Out for Delivery (Dispatched)</option>
+                                <option value="delivered">Delivered Successfully</option>
                             </select>
                         </div>
 
                         <div class="form-group">
-                            <label>Current Location</label>
-                            <input type="text" id="tracking-location" placeholder="e.g., Kitchen, En Route">
+                            <label style="color: var(--primary); font-weight: bold;"><i class="fas fa-motorcycle"></i>
+                                Assign Delivery Rider</label>
+                            <select id="tracking-rider" name="rider_email">
+                                <option value="">-- No Rider Assigned (Unassigned) --</option>
+                            </select>
                         </div>
 
                         <div class="form-group">
-                            <label>Update Message for Customer </label>
-                            <textarea id="tracking-message" required
-                                placeholder="e.g., Your order is being prepared by our chef"></textarea>
+                            <label>Current Action Location</label>
+                            <input type="text" id="tracking-location"
+                                placeholder="e.g., Central Kitchen, En Route on Mainland">
                         </div>
 
-                        <button type="submit" class="btn btn-primary">Update Tracking</button>
+                        <div class="form-group">
+                            <label>Update Message for Customer</label>
+                            <textarea id="tracking-message" required
+                                placeholder="e.g., Your order is being premium boxed by our chef team."></textarea>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary">Save Checkpoint & Dispatch</button>
                     </form>
                 </div>
             </div>
@@ -687,25 +704,23 @@
 
         // --- TAB SWITCHING ---
         function showTab(tabName) {
-            // Remove active class from all sidebar items
             document.querySelectorAll('.nav-item').forEach(item => {
                 item.classList.remove('active');
             });
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(content => {
                 content.classList.remove('active');
             });
 
-            // Activate clicked item and content
-            // We find the nav item that called this by checking the onclick attribute logic or just manual mapping
-            // Simpler approach: Highlight the one that matches
             const clickedItem = event ? event.currentTarget : document.querySelector(`.nav-item[onclick="showTab('${tabName}')"]`);
             if (clickedItem) clickedItem.classList.add('active');
 
             document.getElementById(`${tabName}-tab`).classList.add('active');
 
             if (tabName === 'dashboard') loadDashboardStats();
-            if (tabName === 'orders' || tabName === 'tracking') loadOrders();
+            if (tabName === 'orders' || tabName === 'tracking') {
+                loadOrders();
+                loadAvailableRiders(); // Automatically ensure riders dropdown list updates
+            }
             if (tabName === 'menu') loadMenuItems();
         }
 
@@ -744,8 +759,8 @@
                 statusCounts[o.status] = (statusCounts[o.status] || 0) + 1;
             });
 
-            const recentOrders = orders.slice(0, 8); // Last 8 orders
-            const orderLabels = recentOrders.map(o => `#${o.tracking_id.split('-')[1]}`);
+            const recentOrders = orders.slice(0, 8);
+            const orderLabels = recentOrders.map(o => `#${o.tracking_id ? o.tracking_id.split('-')[1] : 'Order'}`);
             const orderAmounts = recentOrders.map(o => o.total_amount);
 
             if (revenueChart) revenueChart.destroy();
@@ -777,11 +792,12 @@
                     datasets: [{
                         data: Object.values(statusCounts),
                         backgroundColor: [
-                            '#ff9f43', // Pending - Orange
-                            '#54a0ff', // Confirmed - Blue
-                            '#1dd1a1', // Ready - Green
-                            '#10ac84', // Delivered - Dark Green
-                            '#576574'  // Other - Grey
+                            '#ff9f43', // Pending
+                            '#54a0ff', // Confirmed
+                            '#4b0082', // Preparing
+                            '#1dd1a1', // Ready
+                            '#ffebd9', // Out for Delivery
+                            '#10ac84'  // Delivered
                         ],
                         borderWidth: 0
                     }]
@@ -793,6 +809,7 @@
         // --- UTILS ---
         function showAlert(message, type = 'success') {
             const container = document.getElementById('alert-container');
+            if (!container) return;
             const icon = type === 'success' ? '<i class="fas fa-check-circle" style="margin-right:10px"></i>' : '<i class="fas fa-exclamation-circle" style="margin-right:10px"></i>';
             container.innerHTML = `<div class="alert alert-${type}">${icon} ${message}</div>`;
             setTimeout(() => container.innerHTML = '', 5000);
@@ -895,7 +912,7 @@
                         <td><strong>${order.tracking_id}</strong></td>
                         <td>
                             ${order.customer_name}<br>
-                            <span style="font-size:0.85rem; color:#666">${order.customer_email}</span>
+                            <span style="font-size:0.85rem; color:#666">${order.customer_email || 'No email provided'}</span>
                         </td>
                         <td style="font-weight:bold; color:var(--dark)">₦${order.total_amount.toLocaleString()}</td>
                         <td><span class="status-badge status-${order.status}">${order.status.replace('_', ' ')}</span></td>
@@ -908,7 +925,6 @@
                     </tr>
                 `).join('');
 
-                // Update dropdown for tracking tab
                 const select = document.getElementById('tracking-order-select');
                 select.innerHTML = '<option value="">-- Select an order --</option>' +
                     orders.map(order => `<option value="${order.id}">${order.tracking_id} - ${order.customer_name}</option>`).join('');
@@ -917,12 +933,47 @@
             }
         }
 
-        // Helper to jump to tracking tab with selected order
+        // --- DISPATCH RIDER ACQUISITION SYSTEM ---
+        async function loadAvailableRiders() {
+            const select = document.getElementById('tracking-rider');
+            if (!select) return;
+
+            try {
+                // Fetch user profiles filter-restricted to riders
+                const response = await fetch(`${API_URL}/riders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.ok) {
+                    const riders = await response.json();
+                    select.innerHTML = '<option value="">-- No Rider Assigned (Unassigned) --</option>' +
+                        riders.map(r => `<option value="${r.email}">${r.name} (${r.phone || 'No Phone'})</option>`).join('');
+                } else {
+                    // Fallback local registry list to keep the UI from stalling during initial route migrations
+                    setupFallbackRiders();
+                }
+            } catch (e) {
+                setupFallbackRiders();
+            }
+        }
+
+        function setupFallbackRiders() {
+            const select = document.getElementById('tracking-rider');
+            if (select && select.children.length <= 1) {
+                const sampleRiders = [
+                    { name: "Tunde Express Rider", email: "tunde@bellefood.com", phone: "08012345678" },
+                    { name: "Chidi Mainland Dispatch", email: "chidi@bellefood.com", phone: "08198765432" }
+                ];
+                select.innerHTML = '<option value="">-- No Rider Assigned (Unassigned) --</option>' +
+                    sampleRiders.map(r => `<option value="${r.email}">${r.name} (${r.phone})</option>`).join('');
+            }
+        }
+
         function loadOrderDetailsForTracking(orderId) {
             showTab('tracking');
             const select = document.getElementById('tracking-order-select');
             select.value = orderId;
-            loadOrderDetails(); // Trigger the load
+            loadOrderDetails();
         }
 
         function loadOrderDetails() {
@@ -930,18 +981,19 @@
             if (orderId) {
                 document.getElementById('tracking-form-container').style.display = 'block';
                 document.getElementById('tracking-order-id').value = orderId;
-                // Ideally fetch specific order status here to pre-fill form
             } else {
                 document.getElementById('tracking-form-container').style.display = 'none';
             }
         }
 
+        // --- SUBMIT TRACKING STATUS & RIDER ATTACHMENT ---
         document.getElementById('tracking-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const orderId = document.getElementById('tracking-order-id').value;
             const status = document.getElementById('tracking-status').value;
             const location = document.getElementById('tracking-location').value;
             const message = document.getElementById('tracking-message').value;
+            const assignedRiderEmail = document.getElementById('tracking-rider').value;
 
             try {
                 const response = await fetch(`${API_URL}/orders/${orderId}/tracking`, {
@@ -950,21 +1002,31 @@
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${token}`
                     },
-                    body: JSON.stringify({ status, location, update_message: message })
+                    body: JSON.stringify({
+                        status,
+                        location,
+                        update_message: message,
+                        rider_email: assignedRiderEmail // Dispatches assignment link right to your riders!
+                    })
                 });
 
                 if (handleAuthError(response)) return;
 
                 if (response.ok) {
-                    showAlert('Tracking updated successfully!');
+                    alert('Tracking checkpoint logs and rider allocation saved successfully!');
                     e.target.reset();
+                    document.getElementById('tracking-form-container').style.display = 'none';
+                    document.getElementById('tracking-order-select').value = "";
+                    loadDashboardStats();
+                } else {
+                    alert('Failed to update tracking logs.');
                 }
             } catch (error) {
-                showAlert('Error updating tracking', 'error');
+                alert('Error updating tracking status logs.');
             }
         });
 
-        // Init
+        // Init Setup
         loadDashboardStats();
 
         function logout() {

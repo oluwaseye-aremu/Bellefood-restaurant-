@@ -102,12 +102,12 @@ function syncNavbarAuth() {
     const token = localStorage.getItem('bf_token');
     const userString = localStorage.getItem('bf_user');
 
-    // Remove any stale dynamic login elements to prevent layout duplicates
+    // Remove any stale dynamic elements to prevent layout duplicates
     const oldAuthNode = document.getElementById('dynamic-auth-node');
     if (oldAuthNode) oldAuthNode.remove();
 
-    const li = document.createElement('li');
-    li.id = 'dynamic-auth-node';
+    const oldOrdersNode = document.getElementById('customer-orders-nav-node');
+    if (oldOrdersNode) oldOrdersNode.remove();
 
     if (token && userString) {
         try {
@@ -122,7 +122,21 @@ function syncNavbarAuth() {
                 dashboardUrl = 'admin/dashboard.html';
             }
 
-            // 2. UPDATED LAYOUT BLOCK: Wrapped name & avatar inside an anchor link targeting your dashboard
+            // 2. IF CUSTOMER: Inject the "My Orders" link right into the main navbar sequence
+            if (user.role !== 'rider' && user.role !== 'admin') {
+                const ordersLi = document.createElement('li');
+                ordersLi.id = 'customer-orders-nav-node';
+                ordersLi.innerHTML = `
+                    <a href="orders.html" style="display: flex; align-items: center; gap: 6px;">
+                        <i class="fas fa-receipt" style="color: #d4af37; font-size: 0.9rem;"></i> My Orders
+                    </a>
+                `;
+                navLinks.appendChild(ordersLi);
+            }
+
+            // 3. BUILD PROFILE CONTROL CAPSULE
+            const li = document.createElement('li');
+            li.id = 'dynamic-auth-node';
             li.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 0.4rem 1rem; border-radius: 50px; border: 1px solid rgba(214,175,55,0.3); margin-left: 10px;">
                     <a href="${dashboardUrl}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
@@ -133,14 +147,26 @@ function syncNavbarAuth() {
                     <button onclick="triggerLogout()" style="background: none; border: none; color: #ec5b5b; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">Logout</button>
                 </div>
             `;
+            navLinks.appendChild(li);
+
         } catch (e) {
             console.error("Error unpacking customer session profile payload stream:", e);
-            renderLoggedOutLink(li);
+            fallbackLoggedOutRender(navLinks);
         }
     } else {
-        renderLoggedOutLink(li);
+        fallbackLoggedOutRender(navLinks);
     }
+}
 
+// Helper block to clean up the logged out rendering routing
+function fallbackLoggedOutRender(navLinks) {
+    const li = document.createElement('li');
+    li.id = 'dynamic-auth-node';
+    if (typeof renderLoggedOutLink === 'function') {
+        renderLoggedOutLink(li);
+    } else {
+        li.innerHTML = `<a href="auth.html">Login</a>`;
+    }
     navLinks.appendChild(li);
 }
 

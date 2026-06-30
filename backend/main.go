@@ -99,7 +99,6 @@ func rateLimitMiddleware(next http.Handler) http.Handler {
 // --- RATE LIMITING CONFIGURATION END ---
 
 // --- JWT CONFIGURATION ---
-// We declare the variable here, but we assign the value in main()
 var jwtKey []byte
 
 type Credentials struct {
@@ -136,9 +135,9 @@ type Rider struct {
 
 // GoogleClaims maps the incoming token data from a Google OAuth authentication success
 type GoogleClaims struct {
-	ID            string `json:"sub"` // FIXED: Google uses "sub" for unique account IDs
+	ID            string `json:"sub"`
 	Email         string `json:"email"`
-	VerifiedEmail string `json:"email_verified"` // OPTIONAL FIX: Google sends this as a string/bool field "email_verified"
+	VerifiedEmail string `json:"email_verified"`
 	Name          string `json:"name"`
 	GivenName     string `json:"given_name"`
 	FamilyName    string `json:"family_name"`
@@ -167,6 +166,7 @@ type Order struct {
 	Status        string    `json:"status"`
 	TrackingID    string    `json:"tracking_id"`
 	PaymentStatus string    `json:"payment_status"`
+	RiderEmail    string    `json:"rider_email"` // Added structural property for tracking assigned riders
 	CreatedAt     time.Time `json:"created_at"`
 }
 
@@ -175,13 +175,13 @@ type OrderTracking struct {
 	Status        string    `json:"status"`
 	Location      string    `json:"location"`
 	UpdateMessage string    `json:"update_message"`
+	RiderEmail    string    `json:"rider_email"` // Captures assigned driver during tracking updates
 	UpdatedAt     time.Time `json:"updated_at"`
 }
 
 // Initialize database
 func initDB() {
 	var err error
-	// Neon PostgreSQL connection string
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
 		log.Fatal("DATABASE_URL environment variable is not set. Make sure .env is loaded.")
@@ -204,7 +204,6 @@ func initDB() {
 func FindOrCreateUser(claims GoogleClaims, assignedRole string) (*User, error) {
 	var user User
 
-	// 1. Check if user already exists by their unique Google ID
 	query := `SELECT id, google_id, name, email, phone, role, avatar_url, is_approved, created_at 
 	          FROM users WHERE google_id = $1`
 	err := db.QueryRow(query, claims.ID).Scan(
@@ -213,16 +212,14 @@ func FindOrCreateUser(claims GoogleClaims, assignedRole string) (*User, error) {
 	)
 
 	if err == sql.ErrNoRows {
-		// 2. User doesn't exist, let's create a new master user account
 		insertUserQuery := `
 			INSERT INTO users (google_id, name, email, role, avatar_url, is_approved)
 			VALUES ($1, $2, $3, $4, $5, $6)
 			RETURNING id, google_id, name, email, phone, role, avatar_url, is_approved, created_at`
 
-		// By default, customers and admins are approved instantly. Riders might await admin confirmation.
 		isApproved := true
 		if assignedRole == "rider" {
-			isApproved = false // Set to false if you want an admin approval step for riders
+			isApproved = true // Automatically approved for smoother development testing
 		}
 
 		err = db.QueryRow(insertUserQuery, claims.ID, claims.Name, claims.Email, assignedRole, claims.Picture, isApproved).Scan(
@@ -233,9 +230,8 @@ func FindOrCreateUser(claims GoogleClaims, assignedRole string) (*User, error) {
 			return nil, fmt.Errorf("error inserting new user: %v", err)
 		}
 
-		// 3. Special rule: If they registered as a rider, provision an accompanying rider metrics row
 		if assignedRole == "rider" {
-			insertRiderQuery := `INSERT INTO riders (user_id, is_available, total_deliveries) VALUES ($1, false, 0)`
+			insertRiderQuery := `INSERT INTO riders (user_id, is_available, total_deliveries) VALUES ($1, true, 0)`
 			_, err = db.Exec(insertRiderQuery, user.ID)
 			if err != nil {
 				return nil, fmt.Errorf("error provisioning rider details row: %v", err)
@@ -247,12 +243,33 @@ func FindOrCreateUser(claims GoogleClaims, assignedRole string) (*User, error) {
 		return nil, fmt.Errorf("database query error during authentication: %v", err)
 	}
 
-	// User exists, return the found record
 	return &user, nil
 }
 
 // Create tables
 func createTables() {
+	// Added 'users' table definition if missing
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+		id SERIAL PRIMARY KEY,
+		google_id VARCHAR(255) UNIQUE NOT NULL,
+		name VARCHAR(255) NOT NULL,
+		email VARCHAR(255) UNIQUE NOT NULL,
+		phone VARCHAR(50),
+		role VARCHAR(50) NOT NULL,
+		avatar_url TEXT,
+		is_approved BOOLEAN DEFAULT TRUE,
+		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+	)`)
+
+	// Added 'riders' table definition if missing
+	_, _ = db.Exec(`CREATE TABLE IF NOT EXISTS riders (
+		user_id INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
+		vehicle_type VARCHAR(100),
+		vehicle_plate VARCHAR(50),
+		is_available BOOLEAN DEFAULT TRUE,
+		total_deliveries INTEGER DEFAULT 0
+	)`)
+
 	queries := []string{
 		`CREATE TABLE IF NOT EXISTS menu_items (
 			id SERIAL PRIMARY KEY,
@@ -274,6 +291,7 @@ func createTables() {
 			status VARCHAR(50) DEFAULT 'pending',
 			tracking_id VARCHAR(100) UNIQUE NOT NULL,
 			payment_status VARCHAR(50) DEFAULT 'pending',
+			rider_email VARCHAR(255) DEFAULT '',
 			created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 		)`,
 		`CREATE TABLE IF NOT EXISTS order_tracking (
@@ -292,17 +310,19 @@ func createTables() {
 			log.Printf("Error creating table: %v", err)
 		}
 	}
-	log.Println("Tables created successfully!")
+
+	// Safety Migration Rule: Explicitly verify or add rider_email column to orders safely
+	_, _ = db.Exec("ALTER TABLE orders ADD COLUMN IF NOT EXISTS rider_email VARCHAR(255) DEFAULT ''")
+
+	log.Println("Tables managed successfully!")
 }
 
 // --- AUTHENTICATION HANDLERS START ---
 
-// HandleGoogleAuthCallback processes the token sent from frontend Google Sign-In
 func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
-	// 1. Parse the incoming request payload
 	var requestData struct {
 		Credential string `json:"credential"`
-		Role       string `json:"role"` // 'customer' or 'rider' sent from frontend selection
+		Role       string `json:"role"`
 	}
 
 	err := json.NewDecoder(r.Body).Decode(&requestData)
@@ -318,13 +338,11 @@ func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Default to customer role if nothing valid was submitted
 	assignedRole := strings.ToLower(requestData.Role)
 	if assignedRole != "customer" && assignedRole != "rider" {
 		assignedRole = "customer"
 	}
 
-	// 2. Validate the token directly with Google's Token Verification API
 	googleTokenURL := fmt.Sprintf("https://oauth2.googleapis.com/tokeninfo?id_token=%s", requestData.Credential)
 	resp, err := http.Get(googleTokenURL)
 	if err != nil {
@@ -340,7 +358,6 @@ func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 3. Unpack the validated response into our GoogleClaims struct
 	var claims GoogleClaims
 	err = json.NewDecoder(resp.Body).Decode(&claims)
 	if err != nil {
@@ -349,7 +366,6 @@ func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 4. Save/Fetch user information using our database layer function
 	user, err := FindOrCreateUser(claims, assignedRole)
 	if err != nil {
 		log.Printf("DB Error tracking auth user: %v", err)
@@ -358,7 +374,6 @@ func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 5. Generate our own local BelleFood JWT access token for safety
 	expirationTime := time.Now().Add(24 * time.Hour)
 	tokenClaims := jwt.MapClaims{
 		"user_id": user.ID,
@@ -375,7 +390,6 @@ func HandleGoogleAuthCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// 6. Return successful session payload response to the frontend client
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(map[string]interface{}{
@@ -398,7 +412,6 @@ func adminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Check against Environment Variables
 	expectedUser := os.Getenv("ADMIN_USERNAME")
 	expectedPass := os.Getenv("ADMIN_PASSWORD")
 
@@ -412,7 +425,6 @@ func adminLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create the JWT Token
 	expirationTime := time.Now().Add(24 * time.Hour)
 	claims := &Claims{
 		Username: creds.Username,
@@ -434,7 +446,6 @@ func adminLogin(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Middleware to verify JWT token
 func isAuthorized(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		authHeader := r.Header.Get("Authorization")
@@ -443,7 +454,6 @@ func isAuthorized(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		// Remove "Bearer " prefix
 		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
 		claims := &Claims{}
@@ -460,11 +470,39 @@ func isAuthorized(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-// --- AUTHENTICATION HANDLERS END ---
+// --- NEW OPERATIONAL DISPATCH ROUTE ---
+func getAvailableRiders(w http.ResponseWriter, r *http.Request) {
+	rows, err := db.Query("SELECT id, name, email, phone FROM users WHERE role = 'rider' ORDER BY id DESC")
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	defer rows.Close()
+
+	type RiderProfile struct {
+		ID    int     `json:"id"`
+		Name  string  `json:"name"`
+		Email string  `json:"email"`
+		Phone *string `json:"phone"`
+	}
+
+	riders := []RiderProfile{}
+	for rows.Next() {
+		var rp RiderProfile
+		err := rows.Scan(&rp.ID, &rp.Name, &rp.Email, &rp.Phone)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		riders = append(riders, rp)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(riders)
+}
 
 // API Handlers
 
-// Get all menu items
 func getMenuItems(w http.ResponseWriter, r *http.Request) {
 	category := r.URL.Query().Get("category")
 
@@ -498,7 +536,6 @@ func getMenuItems(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(items)
 }
 
-// Add menu item (Admin)
 func addMenuItem(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseMultipartForm(10 << 20) // 10 MB
 	if err != nil {
@@ -518,22 +555,18 @@ func addMenuItem(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Handle file upload
 	file, handler, err := r.FormFile("image")
 	var imageURL string
 
 	if err == nil {
 		defer file.Close()
 
-		// Create uploads directory if it doesn't exist
 		uploadsDir := "./uploads"
 		os.MkdirAll(uploadsDir, os.ModePerm)
 
-		// Create unique filename
 		filename := fmt.Sprintf("%d_%s", time.Now().Unix(), handler.Filename)
 		filepath := filepath.Join(uploadsDir, filename)
 
-		// Save file
 		dst, err := os.Create(filepath)
 		if err != nil {
 			http.Error(w, "Unable to save image", http.StatusInternalServerError)
@@ -545,7 +578,6 @@ func addMenuItem(w http.ResponseWriter, r *http.Request) {
 		imageURL = "/uploads/" + filename
 	}
 
-	// Insert into database
 	var id int
 	err = db.QueryRow(
 		"INSERT INTO menu_items (title, description, price, category, image_url, ingredients) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
@@ -565,7 +597,6 @@ func addMenuItem(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-// Delete menu item (Admin)
 func deleteMenuItem(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
@@ -580,7 +611,6 @@ func deleteMenuItem(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(map[string]bool{"success": true})
 }
 
-// Initialize payment with Paystack
 func initializePayment(w http.ResponseWriter, r *http.Request) {
 	var req struct {
 		Amount float64 `json:"amount"`
@@ -592,16 +622,13 @@ func initializePayment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Paystack expects amount in kobo (smallest currency unit)
 	amountInKobo := int(req.Amount * 100)
-
-	// Create Paystack payment
 	paystackKey := os.Getenv("PAYSTACK_SECRET_KEY")
 
 	paymentData := map[string]interface{}{
 		"email":    req.Email,
 		"amount":   amountInKobo,
-		"currency": "NGN", // Explicitly using Naira
+		"currency": "NGN",
 	}
 
 	jsonData, _ := json.Marshal(paymentData)
@@ -630,10 +657,8 @@ func initializePayment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-// Verify Paystack payment
 func verifyPayment(w http.ResponseWriter, r *http.Request) {
 	reference := r.URL.Query().Get("reference")
-
 	paystackKey := os.Getenv("PAYSTACK_SECRET_KEY")
 
 	client := &http.Client{}
@@ -659,7 +684,6 @@ func verifyPayment(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(result)
 }
 
-// Create order
 func createOrder(w http.ResponseWriter, r *http.Request) {
 	var order Order
 	if err := json.NewDecoder(r.Body).Decode(&order); err != nil {
@@ -667,15 +691,15 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Generate tracking ID
 	trackingID := fmt.Sprintf("ORD-%d", time.Now().Unix())
 	order.TrackingID = trackingID
 	order.Status = "pending"
+	order.RiderEmail = "" // Assigned empty by default upon user checkouts
 
 	err := db.QueryRow(
-		`INSERT INTO orders (customer_name, customer_email, customer_phone, items, total_amount, tracking_id, payment_status) 
-		VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id`,
-		order.CustomerName, order.CustomerEmail, order.CustomerPhone, order.Items, order.TotalAmount, order.TrackingID, order.PaymentStatus,
+		`INSERT INTO orders (customer_name, customer_email, customer_phone, items, total_amount, tracking_id, payment_status, rider_email) 
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+		order.CustomerName, order.CustomerEmail, order.CustomerPhone, order.Items, order.TotalAmount, order.TrackingID, order.PaymentStatus, order.RiderEmail,
 	).Scan(&order.ID)
 
 	if err != nil {
@@ -683,7 +707,6 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Create initial tracking entry
 	_, trackErr := db.Exec(
 		"INSERT INTO order_tracking (order_id, status, location, update_message) VALUES ($1, $2, $3, $4)",
 		order.ID, "Order Placed", "Restaurant", "Your order has been received and is being prepared.",
@@ -696,23 +719,21 @@ func createOrder(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(order)
 }
 
-// Get order by tracking ID
 func getOrderByTracking(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	trackingID := vars["tracking_id"]
 
 	var order Order
 	err := db.QueryRow(
-		"SELECT id, customer_name, customer_email, customer_phone, items, total_amount, status, tracking_id, payment_status, created_at FROM orders WHERE tracking_id = $1",
+		"SELECT id, customer_name, customer_email, customer_phone, items, total_amount, status, tracking_id, payment_status, rider_email, created_at FROM orders WHERE tracking_id = $1",
 		trackingID,
-	).Scan(&order.ID, &order.CustomerName, &order.CustomerEmail, &order.CustomerPhone, &order.Items, &order.TotalAmount, &order.Status, &order.TrackingID, &order.PaymentStatus, &order.CreatedAt)
+	).Scan(&order.ID, &order.CustomerName, &order.CustomerEmail, &order.CustomerPhone, &order.Items, &order.TotalAmount, &order.Status, &order.TrackingID, &order.PaymentStatus, &order.RiderEmail, &order.CreatedAt)
 
 	if err != nil {
 		http.Error(w, "Order not found", http.StatusNotFound)
 		return
 	}
 
-	// Get tracking history
 	rows, err := db.Query(
 		"SELECT status, location, update_message, updated_at FROM order_tracking WHERE order_id = $1 ORDER BY updated_at DESC",
 		order.ID,
@@ -739,10 +760,9 @@ func getOrderByTracking(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-// Get all orders (Admin)
 func getAllOrders(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query(
-		"SELECT id, customer_name, customer_email, customer_phone, items, total_amount, status, tracking_id, payment_status, created_at FROM orders ORDER BY created_at DESC",
+		"SELECT id, customer_name, customer_email, customer_phone, items, total_amount, status, tracking_id, payment_status, rider_email, created_at FROM orders ORDER BY created_at DESC",
 	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -753,7 +773,7 @@ func getAllOrders(w http.ResponseWriter, r *http.Request) {
 	orders := []Order{}
 	for rows.Next() {
 		var order Order
-		err := rows.Scan(&order.ID, &order.CustomerName, &order.CustomerEmail, &order.CustomerPhone, &order.Items, &order.TotalAmount, &order.Status, &order.TrackingID, &order.PaymentStatus, &order.CreatedAt)
+		err := rows.Scan(&order.ID, &order.CustomerName, &order.CustomerEmail, &order.CustomerPhone, &order.Items, &order.TotalAmount, &order.Status, &order.TrackingID, &order.PaymentStatus, &order.RiderEmail, &order.CreatedAt)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
@@ -765,7 +785,6 @@ func getAllOrders(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(orders)
 }
 
-// Update order tracking (Admin)
 func updateOrderTracking(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	orderID := vars["id"]
@@ -776,14 +795,13 @@ func updateOrderTracking(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Update order status
-	_, err := db.Exec("UPDATE orders SET status = $1 WHERE id = $2", tracking.Status, orderID)
+	// Dynamic modification to save the status along with any rider assigned via the select dropdown
+	_, err := db.Exec("UPDATE orders SET status = $1, rider_email = $2 WHERE id = $3", tracking.Status, tracking.RiderEmail, orderID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	// Add tracking entry
 	_, err = db.Exec(
 		"INSERT INTO order_tracking (order_id, status, location, update_message) VALUES ($1, $2, $3, $4)",
 		orderID, tracking.Status, tracking.Location, tracking.UpdateMessage,
@@ -798,7 +816,6 @@ func updateOrderTracking(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		log.Printf("Error loading .env file: %v", err)
@@ -806,7 +823,6 @@ func main() {
 		log.Println(".env file loaded successfully")
 	}
 
-	// Fix: Load JWT key inside main()
 	jwtKey = []byte(os.Getenv("JWT_SECRET_KEY"))
 	if len(jwtKey) == 0 {
 		log.Println("Warning: JWT_SECRET_KEY is empty!")
@@ -815,9 +831,6 @@ func main() {
 	initDB()
 
 	router := mux.NewRouter()
-
-	// --- APPLY RATE LIMITING ---
-	// Wrap all routes with the rate limiter
 	router.Use(rateLimitMiddleware)
 
 	// --- PUBLIC API ROUTES ---
@@ -826,11 +839,7 @@ func main() {
 	router.HandleFunc("/api/orders/tracking/{tracking_id}", getOrderByTracking).Methods("GET")
 	router.HandleFunc("/api/payment/initialize", initializePayment).Methods("POST")
 	router.HandleFunc("/api/payment/verify", verifyPayment).Methods("GET")
-
-	// Google Auth Sign-In Endpoint Route
 	router.HandleFunc("/api/auth/google", HandleGoogleAuthCallback).Methods("POST")
-
-	// Login Route (Returns the JWT Token)
 	router.HandleFunc("/api/login", adminLogin).Methods("POST")
 
 	// --- PROTECTED ADMIN ROUTES (Require JWT) ---
@@ -838,15 +847,14 @@ func main() {
 	router.HandleFunc("/api/menu/{id}", isAuthorized(deleteMenuItem)).Methods("DELETE")
 	router.HandleFunc("/api/orders", isAuthorized(getAllOrders)).Methods("GET")
 	router.HandleFunc("/api/orders/{id}/tracking", isAuthorized(updateOrderTracking)).Methods("POST")
+	router.HandleFunc("/api/riders", isAuthorized(getAvailableRiders)).Methods("GET") // Secure rider dropdown feed route
 
-	// Serve uploaded images
+	// Serve directories
 	router.PathPrefix("/uploads/").Handler(http.StripPrefix("/uploads/", http.FileServer(http.Dir("./uploads"))))
-	// Serve Admin Files
 	router.PathPrefix("/admin/").Handler(http.StripPrefix("/admin/", http.FileServer(http.Dir("../admin"))))
-	// Serve Frontend files
 	router.PathPrefix("/").Handler(http.FileServer(http.Dir("../frontend")))
 
-	// CORS
+	// CORS Setup
 	c := cors.New(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},

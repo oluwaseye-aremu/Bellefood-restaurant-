@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Food Orders | BelleFood</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@600;700&display=swap"
+        rel="stylesheet">
+    <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.png">
+    <style>
+        :root {
+            --gold: #d4af37;
+            --dark-bg: #0d0d0d;
+            --card-bg: #1a1a1a;
+            --text-light: #ffffff;
+            --text-muted: #aaaaaa;
+        }
+
+        body {
+            background-color: var(--dark-bg);
+            color: var(--text-light);
+            font-family: 'Lato', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            margin: 0;
+        }
+
+        .orders-wrapper {
+            max-width: 1000px;
+            width: 100%;
+            margin: 8rem auto 4rem;
+            padding: 0 2rem;
+            box-sizing: border-box;
+            flex: 1;
+        }
+
+        .page-title {
+            font-family: 'Playfair Display', serif;
+            color: var(--gold);
+            font-size: 2.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        /* --- TABS ENGINE SYSTEM --- */
+        .order-tabs {
+            display: flex;
+            gap: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 2rem;
+            padding-bottom: 1px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 10px 20px;
+            cursor: pointer;
+            position: relative;
+            transition: color 0.3s ease;
+        }
+
+        .tab-btn.active {
+            color: var(--gold);
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gold);
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+        }
+
+        /* --- CARD OBJECT LAYOUTS --- */
+        .order-card {
+            background: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .order-card:hover {
+            border-color: rgba(214, 175, 55, 0.3);
+        }
+
+        .order-info {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .order-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .order-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: #ffffff;
+        }
+
+        .status-pill {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 50px;
+            letter-spacing: 0.5px;
+        }
+
+        .status-pill.pending {
+            background: rgba(214, 175, 55, 0.15);
+            color: var(--gold);
+        }
+
+        .status-pill.ongoing {
+            background: rgba(46, 196, 182, 0.15);
+            color: #2ec4b6;
+        }
+
+        .status-pill.completed {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+        }
+
+        .order-meta-text {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .track-action-btn {
+            background: var(--gold);
+            color: #111111;
+            padding: 0.6rem 1.4rem;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            transition: opacity 0.2s;
+        }
+
+        .track-action-btn:hover {
+            opacity: 0.9;
+        }
+
+        .empty-history-state {
+            text-align: center;
+            padding: 5rem 2rem;
+            color: var(--text-muted);
+        }
+
+        .empty-history-state i {
+            font-size: 3.5rem;
+            color: rgba(214, 175, 55, 0.15);
+            margin-bottom: 1.5rem;
+        }
+
+        footer {
+            background: #070707;
+            color: var(--text-muted);
+            padding: 1.5rem;
+            font-size: 0.85rem;
+            text-align: center;
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
+            margin-top: auto;
+        }
+    </style>
+</head>
+
+<body>
+
+    <header class="navbar" style="background-color: rgb(26, 26, 26);">
+        <div class="container navbar-container">
+            <a href="index.html" class="logo" style="display: flex; align-items: center; text-decoration: none;">
+                <img src="assets/sisi-alase-removebg-preview.png" alt="BelleFood Logo"
+                    style="max-height: 45px; margin-right: 12px;">
+                <h1 class="font-secondary" style="color: #fff; font-size: 1.7rem; margin:0;">BelleFood</h1>
+            </a>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="menu.html">Menu</a></li>
+                <li><a href="about.html">About</a></li>
+                <li><a href="contact.html">Contact</a></li>
+            </ul>
+        </div>
+    </header>
+
+    <main class="orders-wrapper">
+        <h1 class="page-title">Track Your Orders</h1>
+        <p style="color: var(--text-muted); margin: 0 0 2rem 0;">View your current delivery metrics and pipeline order
+            history records.</p>
+
+        <div class="order-tabs">
+            <button class="tab-btn active" onclick="switchFilterTab('all')">All Orders</button>
+            <button class="tab-btn" onclick="switchFilterTab('ongoing')">Ongoing</button>
+            <button class="tab-btn" onclick="switchFilterTab('completed')">Completed</button>
+        </div>
+
+        <div id="orders-list-container">
+            <div class="empty-history-state">
+                <i class="fas fa-spinner fa-spin" style="color: var(--gold);"></i>
+                <p>Synchronizing your order manifest cache...</p>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2026 <span>BelleFood Luxury Dining</span> • Secure Customer Checkout Hub</p>
+    </footer>
+
+    <script>
+        let fullOrderHistoryCache = [];
+        let runningFilterSelection = 'all';
+
+        // Block non-authenticated profiles
+        const token = localStorage.getItem('bf_token');
+        const userString = localStorage.getItem('bf_user');
+        if (!token || !userString) {
+            window.location.href = 'auth.html';
+        }
+        const currentUser = JSON.parse(userString);
+
+        async function fetchCustomerOrders() {
+            const container = document.getElementById('orders-list-container');
+            try {
+                // Queries your API with user token context mapping
+                const response = await fetch(`${window.location.origin}/api/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) {
+                    renderEmptyState();
+                    return;
+                }
+
+                const internalOrders = await response.json();
+
+                // Secure Client-Side Filter Strategy: ensures normal clients only see entries belonging to them
+                fullOrderHistoryCache = internalOrders.filter(o => o.email === currentUser.email);
+                renderFilteredList();
+
+            } catch (err) {
+                console.error("Network synchronization exception:", err);
+                renderEmptyState();
+            }
+        }
+
+        function renderFilteredList() {
+            const container = document.getElementById('orders-list-container');
+
+            let filtered = fullOrderHistoryCache;
+            if (runningFilterSelection === 'ongoing') {
+                filtered = fullOrderHistoryCache.filter(o => o.status === 'pending' || o.status === 'ongoing' || o.status === 'dispatched');
+            } else if (runningFilterSelection === 'completed') {
+                filtered = fullOrderHistoryCache.filter(o => o.status === 'completed' || o.status === 'delivered');
+            }
+
+            if (filtered.length === 0) {
+                renderEmptyState();
+                return;
+            }
+
+            container.innerHTML = filtered.map(order => {
+                // Map status values cleanly
+                let displayStatus = order.status || 'pending';
+                let statusClass = 'pending';
+                if (['ongoing', 'dispatched', 'en-route'].includes(displayStatus)) statusClass = 'ongoing';
+                if (['completed', 'delivered'].includes(displayStatus)) statusClass = 'completed';
+
+                return `
+                    <div class="order-card">
+                        <div class="order-info">
+                            <div class="order-header">
+                                <span class="order-id">Order #${order.tracking_id.substring(0, 8).toUpperCase()}</span>
+                                <span class="status-pill ${statusClass}">${displayStatus}</span>
+                            </div>
+                            <span class="order-meta-text">Items: ${order.items || 'Gourmet Selection Package'}</span>
+                            <span class="order-meta-text" style="font-size:0.8rem;"><i class="far fa-clock"></i> Reference: ${order.tracking_id}</span>
+                        </div>
+                        <div>
+                            <a href="tracking.html?id=${order.tracking_id}" class="track-action-btn"><i class="fas fa-location-crosshairs"></i> Track Live</a>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function switchFilterTab(targetFilter) {
+            runningFilterSelection = targetFilter;
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderFilteredList();
+        }
+
+        function renderEmptyState() {
+            document.getElementById('orders-list-container').innerHTML = `
+                <div class="empty-history-state">
+                    <i class="fas fa-box-open"></i>
+                    <p style="font-size: 1.1rem; color: #fff; font-weight: bold; margin-bottom: 5px;">No matching records found</p>
+                    <p style="margin: 0; font-size: 0.9rem;">Any food purchases you make will materialize here automatically for seamless tracking.</p>
+                </div>
+            `;
+        }
+
+        document.addEventListener('DOMContentLoaded', fetchCustomerOrders);
+    </script>
+    <script src="js/script.js"></script>
+</body>
+
+</html>

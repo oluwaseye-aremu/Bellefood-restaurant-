@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Checkout | 24/7 BelleFood Restaurant</title>
     <script src="https://js.paystack.co/v1/inline.js"></script>
-    <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.png">
+    <link rel="icon" type="image/png" href="assets/sisi-alase-removebg-preview.jpeg">
     <style>
         * {
             margin: 0;
@@ -259,11 +259,10 @@
     </div>
 
     <script>
-        // FIXED: Using relative path
         const API_URL = '/api';
         let cart = JSON.parse(localStorage.getItem('cart') || '[]');
 
-        // --- HELPER FUNCTIONS (MOVED TO TOP FOR SAFETY) ---
+        // --- HELPER FUNCTIONS ---
         function showLoading(text) {
             const overlay = document.getElementById('loading-overlay');
             const txt = document.getElementById('loading-text');
@@ -273,6 +272,7 @@
             }
         }
 
+        // Keep core tracking routing clean
         function hideLoading() {
             const overlay = document.getElementById('loading-overlay');
             if (overlay) overlay.style.display = 'none';
@@ -283,7 +283,6 @@
             if (el) {
                 el.textContent = msg;
                 el.style.display = 'block';
-                // Scroll to top so user sees error
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 setTimeout(() => el.style.display = 'none', 10000);
             }
@@ -402,7 +401,7 @@
             }
         }
 
-        // 5. CREATE ORDER
+        // 5. CREATE ORDER WITH SECURE RE-ROUTING DATA
         async function createOrder() {
             showLoading('Creating Order...');
             const customerData = JSON.parse(sessionStorage.getItem('checkout_data'));
@@ -428,10 +427,11 @@
                     const order = await response.json();
                     document.getElementById('tracking-id').textContent = order.tracking_id;
 
+                    // UPDATED: Points directly to your premium layout tracking page
                     const trackBtn = document.getElementById('track-btn');
                     if (trackBtn) {
                         trackBtn.onclick = function () {
-                            window.location.href = `track.html?id=${order.tracking_id}`;
+                            window.location.href = `tracking.html?id=${order.tracking_id}`;
                         };
                     }
 
