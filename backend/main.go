@@ -136,9 +136,9 @@ type Rider struct {
 
 // GoogleClaims maps the incoming token data from a Google OAuth authentication success
 type GoogleClaims struct {
-	ID            string `json:"id"`
+	ID            string `json:"sub"` // FIXED: Google uses "sub" for unique account IDs
 	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
+	VerifiedEmail string `json:"email_verified"` // OPTIONAL FIX: Google sends this as a string/bool field "email_verified"
 	Name          string `json:"name"`
 	GivenName     string `json:"given_name"`
 	FamilyName    string `json:"family_name"`

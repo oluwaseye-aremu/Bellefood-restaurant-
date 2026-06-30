@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // Functions exposed globally to handle state renders and user events cleanly
+// Functions exposed globally to handle state renders and user events cleanly
 function syncNavbarAuth() {
     const navLinks = document.querySelector('.nav-links');
     if (!navLinks) return;
@@ -113,12 +114,23 @@ function syncNavbarAuth() {
             const user = JSON.parse(userString);
             const shortName = user.name ? user.name.split(' ')[0] : 'User';
 
-            // Logged-in styling block matching your layout palette
+            // 1. DYNAMIC REDIRECT LINK CHECK BASED ON USER ROLE
+            let dashboardUrl = 'index.html';
+            if (user.role === 'rider') {
+                dashboardUrl = 'rider-dashboard.html';
+            } else if (user.role === 'admin') {
+                dashboardUrl = 'admin/dashboard.html';
+            }
+
+            // 2. UPDATED LAYOUT BLOCK: Wrapped name & avatar inside an anchor link targeting your dashboard
             li.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.05); padding: 0.4rem 1rem; border-radius: 50px; border: 1px solid rgba(214,175,55,0.3); margin-left: 10px;">
-                    <img src="${user.avatar_url || 'https://via.placeholder.com/32'}" alt="Profile Image" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37;">
-                    <span style="color: #ffffff; font-weight: bold; font-size: 0.9rem;">Hi, ${shortName}</span>
-                    <button onclick="triggerLogout()" style="background: none; border: none; color: #ec5b5b; font-weight: bold; cursor: pointer; font-size: 0.85rem; margin-left: 5px; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">Logout</button>
+                    <a href="${dashboardUrl}" style="display: flex; align-items: center; gap: 8px; text-decoration: none; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.8" onmouseout="this.style.opacity=1">
+                        <img src="https://ui-avatars.com/api/?name=${encodeURIComponent(user.name || 'User')}&background=d4af37&color=fff&bold=true&rounded=true" alt="Profile Image" style="width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid #d4af37;">
+                        <span style="color: #ffffff; font-weight: bold; font-size: 0.9rem;">Hi, ${shortName}</span>
+                    </a>
+                    <span style="color: rgba(255,255,255,0.2);">|</span>
+                    <button onclick="triggerLogout()" style="background: none; border: none; color: #ec5b5b; font-weight: bold; cursor: pointer; font-size: 0.85rem; transition: opacity 0.2s;" onmouseover="this.style.opacity=0.7" onmouseout="this.style.opacity=1">Logout</button>
                 </div>
             `;
         } catch (e) {
